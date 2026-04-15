@@ -1,11 +1,13 @@
 document.documentElement.classList.add("js");
 
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const revealItems = document.querySelectorAll("[data-reveal]");
 const countItems = document.querySelectorAll("[data-count]");
-const navLinks = Array.from(document.querySelectorAll(".site-nav a"));
-const sections = Array.from(document.querySelectorAll("section[id]"));
+const navLinks = Array.from(document.querySelectorAll(".site-nav a[href^='#']"));
+const sections = navLinks
+  .map((link) => document.querySelector(link.getAttribute("href")))
+  .filter(Boolean);
 const header = document.querySelector(".site-header");
-const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const revealObserver = new IntersectionObserver(
   (entries) => {
@@ -31,31 +33,32 @@ revealItems.forEach((item) => {
 });
 
 const animateCount = (element) => {
-  const target = Number(element.dataset.count || "0");
+  const target = Number.parseFloat(element.dataset.count || "0");
+  const decimals = Number.parseInt(element.dataset.decimals || "0", 10);
 
   if (!Number.isFinite(target)) {
     return;
   }
 
   if (reducedMotion) {
-    element.textContent = String(target);
+    element.textContent = target.toFixed(decimals);
     return;
   }
 
-  element.textContent = "0";
   const duration = 900;
   const start = performance.now();
 
-  const step = (now) => {
+  const tick = (now) => {
     const progress = Math.min((now - start) / duration, 1);
-    element.textContent = String(Math.round(progress * target));
+    const value = target * progress;
+    element.textContent = value.toFixed(decimals);
 
     if (progress < 1) {
-      requestAnimationFrame(step);
+      requestAnimationFrame(tick);
     }
   };
 
-  requestAnimationFrame(step);
+  requestAnimationFrame(tick);
 };
 
 const countObserver = new IntersectionObserver(
@@ -76,26 +79,26 @@ countItems.forEach((item) => countObserver.observe(item));
 
 const setActiveLink = (id) => {
   navLinks.forEach((link) => {
-    const isActive = link.getAttribute("href") === `#${id}`;
-    link.setAttribute("aria-current", isActive ? "true" : "false");
+    const active = link.getAttribute("href") === `#${id}`;
+    link.setAttribute("aria-current", active ? "true" : "false");
   });
 };
 
 const sectionObserver = new IntersectionObserver(
   (entries) => {
-    const visibleEntries = entries
+    const visible = entries
       .filter((entry) => entry.isIntersecting)
       .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
 
-    if (!visibleEntries.length) {
+    if (!visible.length) {
       return;
     }
 
-    setActiveLink(visibleEntries[0].target.id);
+    setActiveLink(visible[0].target.id);
   },
   {
     threshold: [0.2, 0.35, 0.5, 0.75],
-    rootMargin: "-30% 0px -45% 0px",
+    rootMargin: "-28% 0px -50% 0px",
   }
 );
 
@@ -106,7 +109,7 @@ const syncHeader = () => {
     return;
   }
 
-  header.classList.toggle("scrolled", window.scrollY > 20);
+  header.classList.toggle("scrolled", window.scrollY > 18);
 };
 
 syncHeader();

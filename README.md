@@ -1,8 +1,11 @@
 # Zonghan Du Academic Homepage
 
-Static academic homepage for PhD applications, built as a plain HTML/CSS/JS site so it can be deployed directly to GitHub Pages.
+Static academic homepage for PhD applications, built as a plain HTML/CSS/JS
+site for direct deployment on GitHub Pages.
 
-The current published version omits the PDF CV asset. If you want a direct CV button later, add the file as `assets/Zonghan_Du_Resume.pdf`.
+This version is aligned to the current resume content. Website sections only
+include education, research experience, publications, honors, and skills that
+appear on that resume.
 
 ## Files
 
@@ -21,13 +24,10 @@ python3 -m http.server 8000
 
 Then visit `http://localhost:8000`.
 
-## GitHub Pages Deployment
+## GitHub Pages
 
-Your GitHub username is `gwkuqgfkqe`, so you have two deployment choices:
-
-1. Recommended user site
-
-Create a repository named `gwkuqgfkqe.github.io`, put all files from this folder at the repository root, then push to the default branch.
+For the user site repository `gwkuqgfkqe.github.io`, publish the files in this
+folder to the repository root.
 
 Final URL:
 
@@ -35,17 +35,7 @@ Final URL:
 https://gwkuqgfkqe.github.io/
 ```
 
-2. Project site
-
-Create any repository name such as `academic-homepage`, upload these files, then enable GitHub Pages from the repository settings using the default branch and root folder.
-
-Final URL format:
-
-```text
-https://gwkuqgfkqe.github.io/<repo-name>/
-```
-
-## External Links Included
+## Resume Links
 
 - Email: `mailto:zonghan_du@brown.edu`
 - LinkedIn: `https://www.linkedin.com/in/zonghan-frank-du/`
