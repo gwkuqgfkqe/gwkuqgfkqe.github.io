@@ -3,9 +3,9 @@
 Static academic homepage for PhD applications, built as a plain HTML/CSS/JS
 site for direct deployment on GitHub Pages.
 
-This version is aligned to the current resume content. Website sections only
-include education, research experience, publications, honors, and skills that
-appear on that resume.
+This version is aligned to the latest CV content. Website sections include
+research interests, a PhD-facing research plan, complete research experience,
+publications, honors, skills, and the athletics profile requested for the site.
 
 ## Files
 
