@@ -313,6 +313,17 @@ a {
   font-weight: 600;
 }
 
+.hero-interests {
+  margin: 1rem 0 0;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.hero-interests span {
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
 .hero-text,
 .section-heading p,
 .focus-card p,
@@ -336,6 +347,8 @@ a {
 .profile-links,
 .metrics-grid,
 .focus-grid,
+.interest-grid,
+.plan-grid,
 .education-grid,
 .project-grid,
 .publication-panels,
@@ -485,13 +498,28 @@ a {
 }
 
 #research,
+#plan,
 #experience,
 #publications,
 #contact {
   padding: 2rem 0 4rem;
 }
 
+.interest-grid,
+.plan-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.interest-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .focus-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.plan-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -691,6 +719,12 @@ a {
   font-weight: 600;
 }
 
+.publication-citation {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+  font-size: 0.96rem;
+}
+
 .link-row {
   grid-auto-flow: column;
   justify-content: start;
@@ -799,6 +833,8 @@ a {
     grid-template-columns: 1fr;
   }
 
+  .interest-grid,
+  .plan-grid,
   .project-grid.three-up,
   .focus-grid,
   .metrics-grid {
@@ -829,6 +865,8 @@ a {
   .profile-links,
   .education-grid,
   .details-grid,
+  .interest-grid,
+  .plan-grid,
   .project-grid.two-up,
   .project-grid.three-up,
   .contact-links,
@@ -864,6 +902,7 @@ a {
 
   .hero,
   #research,
+  #plan,
   #experience,
   #publications,
   #contact {
