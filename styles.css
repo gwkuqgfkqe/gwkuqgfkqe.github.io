@@ -40,10 +40,10 @@ body {
   min-height: 100vh;
   color: var(--text);
   background:
-    radial-gradient(circle at 14% 10%, rgba(58, 166, 188, 0.15), transparent 24%),
-    radial-gradient(circle at 86% 14%, rgba(150, 100, 63, 0.16), transparent 20%),
-    radial-gradient(circle at 58% 22%, rgba(103, 212, 224, 0.12), transparent 22%),
-    linear-gradient(180deg, #fbfbf8 0%, #eff2ed 38%, #e7ebe7 100%);
+    radial-gradient(circle at 16% 10%, rgba(58, 166, 188, 0.16), transparent 24%),
+    radial-gradient(circle at 78% 18%, rgba(58, 166, 188, 0.16), transparent 18%),
+    radial-gradient(circle at 64% 72%, rgba(150, 100, 63, 0.12), transparent 22%),
+    linear-gradient(180deg, #fbfcfb 0%, #eff5f2 36%, #e6eeec 100%);
   font-family: var(--font-body);
   line-height: 1.7;
 }
@@ -60,6 +60,19 @@ body::before {
     linear-gradient(90deg, rgba(23, 34, 45, 0.03) 1px, transparent 1px);
   background-size: 96px 96px;
   mask-image: radial-gradient(circle at center, black 44%, transparent 100%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -4;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 72% 24%, rgba(58, 166, 188, 0.14), transparent 18%),
+    linear-gradient(115deg, transparent 22%, rgba(58, 166, 188, 0.06) 44%, transparent 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 35%, rgba(16, 61, 68, 0.03) 100%);
+  opacity: 0.9;
 }
 
 a {
@@ -85,56 +98,67 @@ a {
   pointer-events: none;
 }
 
+.neural-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 68% 24%, rgba(58, 166, 188, 0.16), transparent 16%),
+    radial-gradient(circle at 25% 76%, rgba(150, 100, 63, 0.14), transparent 18%);
+  opacity: 0.9;
+}
+
 .neural-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.94;
+  opacity: 0.98;
 }
 
 .neural-halo,
-.neural-hud {
+.neural-hud,
+.neural-chip {
   position: absolute;
 }
 
 .neural-halo {
   border-radius: 999px;
-  filter: blur(80px);
-  opacity: 0.38;
+  filter: blur(86px);
+  opacity: 0.44;
   mix-blend-mode: screen;
 }
 
 .neural-halo-one {
-  top: 7%;
-  left: 48%;
-  width: 32rem;
-  height: 21rem;
+  top: 4%;
+  left: 52%;
+  width: 34rem;
+  height: 22rem;
   background:
-    radial-gradient(circle at 30% 50%, rgba(58, 166, 188, 0.34), transparent 58%),
-    radial-gradient(circle at 72% 50%, rgba(103, 212, 224, 0.26), transparent 56%);
+    radial-gradient(circle at 30% 50%, rgba(58, 166, 188, 0.44), transparent 58%),
+    radial-gradient(circle at 72% 50%, rgba(103, 212, 224, 0.3), transparent 56%);
 }
 
 .neural-halo-two {
-  right: -8rem;
-  bottom: 10%;
-  width: 24rem;
+  right: -6rem;
+  bottom: 8%;
+  width: 28rem;
   height: 18rem;
   background:
-    radial-gradient(circle at 35% 35%, rgba(150, 100, 63, 0.28), transparent 52%),
-    radial-gradient(circle at 65% 65%, rgba(29, 88, 97, 0.18), transparent 58%);
+    radial-gradient(circle at 35% 35%, rgba(150, 100, 63, 0.34), transparent 52%),
+    radial-gradient(circle at 65% 65%, rgba(29, 88, 97, 0.2), transparent 58%);
 }
 
 .neural-hud {
-  border: 1px solid rgba(16, 61, 68, 0.1);
+  border: 1px solid rgba(16, 61, 68, 0.12);
   border-radius: 28px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.14)),
-    linear-gradient(135deg, rgba(58, 166, 188, 0.08), rgba(150, 100, 63, 0.05));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.09)),
+    linear-gradient(135deg, rgba(58, 166, 188, 0.12), rgba(150, 100, 63, 0.06));
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.28),
-    0 20px 40px rgba(18, 37, 46, 0.06);
-  opacity: 0.68;
+    0 20px 40px rgba(18, 37, 46, 0.08);
+  opacity: 0.84;
 }
 
 .neural-hud::before,
@@ -160,19 +184,64 @@ a {
 }
 
 .neural-hud-one {
-  top: 16%;
-  right: 8%;
-  width: 14rem;
-  height: 9rem;
-  transform: rotate(-6deg);
+  top: 14%;
+  right: 4%;
+  width: 20rem;
+  height: 10rem;
+  transform: rotate(-5deg);
 }
 
 .neural-hud-two {
-  bottom: 14%;
-  left: 6%;
-  width: 12rem;
-  height: 7rem;
-  transform: rotate(8deg);
+  bottom: 10%;
+  left: 3%;
+  width: 17rem;
+  height: 8rem;
+  transform: rotate(6deg);
+}
+
+.neural-chip {
+  display: grid;
+  gap: 0.26rem;
+  min-width: 10rem;
+  padding: 0.72rem 0.9rem;
+  border: 1px solid rgba(16, 61, 68, 0.1);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.12)),
+    rgba(240, 248, 246, 0.34);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.34),
+    0 18px 36px rgba(18, 37, 46, 0.06);
+  backdrop-filter: blur(10px);
+  opacity: 0.76;
+}
+
+.neural-chip span,
+.neural-chip strong {
+  font-family: var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.neural-chip span {
+  color: rgba(16, 61, 68, 0.7);
+  font-size: 0.58rem;
+}
+
+.neural-chip strong {
+  color: rgba(16, 61, 68, 0.92);
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+
+.neural-chip-one {
+  top: 20%;
+  left: 4%;
+}
+
+.neural-chip-two {
+  right: 8%;
+  bottom: 18%;
 }
 
 .glow {
@@ -189,13 +258,13 @@ a {
 .glow-one {
   top: -8rem;
   left: -8rem;
-  background: rgba(58, 166, 188, 0.18);
+  background: rgba(58, 166, 188, 0.24);
 }
 
 .glow-two {
   top: 18rem;
   right: -8rem;
-  background: rgba(150, 100, 63, 0.18);
+  background: rgba(150, 100, 63, 0.22);
 }
 
 .site-header,
@@ -949,7 +1018,7 @@ a {
   }
 
   .neural-hud {
-    opacity: 0.46;
+    opacity: 0.58;
   }
 
   .interest-grid,
@@ -968,6 +1037,10 @@ a {
 @media (max-width: 860px) {
   .neural-hud {
     display: none;
+  }
+
+  .neural-chip {
+    opacity: 0.56;
   }
 
   .neural-halo-one {
@@ -1025,6 +1098,10 @@ a {
 @media (max-width: 620px) {
   .neural-canvas {
     opacity: 0.82;
+  }
+
+  .neural-chip {
+    display: none;
   }
 
   .site-header,
