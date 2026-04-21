@@ -133,19 +133,23 @@ const initializeNeuralField = (canvas) => {
     targetX: 0,
     targetY: 0,
     active: false,
+    pulseAt: 0,
   };
   let width = 0;
   let height = 0;
   let dpr = 1;
   let frameId = 0;
   let brainGeometry = null;
-  let intracorticalArray = [];
-  let surfaceArray = [];
-  let fiberCurves = [];
-  let signalLanes = [];
+  let neurons = [];
+  let edges = [];
+  let adjacency = [];
+  let electrodeArray = { cols: 0, rows: 0, contacts: [] };
+  let collectors = [];
+  let bursts = [];
 
   const lerp = (start, end, amount) => start + (end - start) * amount;
   const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
+  const distance = (from, to) => Math.hypot(from.x - to.x, from.y - to.y);
 
   const sampleBezier = (p0, p1, p2, p3, t) => {
     const mt = 1 - t;
@@ -163,61 +167,242 @@ const initializeNeuralField = (canvas) => {
     return { x, y };
   };
 
-  const buildPerspectiveArray = ({
-    originX,
-    originY,
-    cols,
-    rows,
-    stepX,
-    stepY,
-    skewX,
-    skewY,
-    depthX,
-    depthY,
-    group,
-  }) => {
+  const sampleBridge = (start, end, t, bend = 0.18) => {
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const length = Math.hypot(dx, dy) || 1;
+    const normalX = -dy / length;
+    const normalY = dx / length;
+    const lift = Math.min(26, length * bend);
+
+    return sampleBezier(
+      start,
+      {
+        x: lerp(start.x, end.x, 0.28) + normalX * lift,
+        y: lerp(start.y, end.y, 0.28) + normalY * lift,
+      },
+      {
+        x: lerp(start.x, end.x, 0.72) + normalX * lift * 0.62,
+        y: lerp(start.y, end.y, 0.72) + normalY * lift * 0.62,
+      },
+      end,
+      t
+    );
+  };
+
+  const brainContainsNormalized = (nx, ny) => {
+    const leftHemisphere = ((nx + 0.3) ** 2) / 0.47 + ((ny + 0.02) ** 2) / 0.56 <= 1;
+    const rightHemisphere = ((nx - 0.3) ** 2) / 0.47 + ((ny + 0.02) ** 2) / 0.56 <= 1;
+    const crown = (nx ** 2) / 1.03 + ((ny + 0.2) ** 2) / 0.58 <= 1;
+    const lowerMass = (nx ** 2) / 0.9 + ((ny - 0.16) ** 2) / 0.68 <= 1;
+    const brainStemCut = (nx ** 2) / 0.03 + ((ny - 0.98) ** 2) / 0.02 <= 1;
+
+    return (leftHemisphere || rightHemisphere || crown || lowerMass) && !brainStemCut && ny > -0.96 && ny < 1.04;
+  };
+
+  const brainContainsPoint = (x, y) => {
+    if (!brainGeometry) {
+      return false;
+    }
+
+    const nx = (x - brainGeometry.cx) / brainGeometry.sx;
+    const ny = (y - brainGeometry.cy) / brainGeometry.sy;
+    return brainContainsNormalized(nx, ny);
+  };
+
+  const traceBrainPath = (scale = 1, offsetX = 0, offsetY = 0) => {
+    const { cx, cy, sx, sy } = brainGeometry;
+
+    context.moveTo(cx - sx * 0.98 * scale + offsetX, cy + sy * 0.08 * scale + offsetY);
+    context.bezierCurveTo(
+      cx - sx * 1.16 * scale + offsetX,
+      cy - sy * 0.52 * scale + offsetY,
+      cx - sx * 0.76 * scale + offsetX,
+      cy - sy * 0.94 * scale + offsetY,
+      cx - sx * 0.22 * scale + offsetX,
+      cy - sy * 0.9 * scale + offsetY
+    );
+    context.bezierCurveTo(
+      cx + sx * 0.18 * scale + offsetX,
+      cy - sy * 1.02 * scale + offsetY,
+      cx + sx * 0.82 * scale + offsetX,
+      cy - sy * 0.86 * scale + offsetY,
+      cx + sx * 0.98 * scale + offsetX,
+      cy - sy * 0.26 * scale + offsetY
+    );
+    context.bezierCurveTo(
+      cx + sx * 1.1 * scale + offsetX,
+      cy + sy * 0.18 * scale + offsetY,
+      cx + sx * 0.82 * scale + offsetX,
+      cy + sy * 0.78 * scale + offsetY,
+      cx + sx * 0.2 * scale + offsetX,
+      cy + sy * 0.86 * scale + offsetY
+    );
+    context.bezierCurveTo(
+      cx - sx * 0.18 * scale + offsetX,
+      cy + sy * 0.92 * scale + offsetY,
+      cx - sx * 0.78 * scale + offsetX,
+      cy + sy * 0.72 * scale + offsetY,
+      cx - sx * 0.98 * scale + offsetX,
+      cy + sy * 0.08 * scale + offsetY
+    );
+  };
+
+  const buildElectrodeArray = () => {
+    const cols = width < 900 ? 4 : 5;
+    const rows = width < 900 ? 4 : 5;
     const contacts = [];
+    const plateX = brainGeometry.cx + brainGeometry.sx * 0.12;
+    const plateY = brainGeometry.cy - brainGeometry.sy * 0.84;
 
     for (let row = 0; row < rows; row += 1) {
       for (let col = 0; col < cols; col += 1) {
-        const x = originX + col * stepX + row * skewX;
-        const y = originY + row * stepY - col * skewY;
+        const index = row * cols + col;
+        const baseX = plateX + col * 18 + row * 4.2;
+        const baseY = plateY + row * 12.5 - col * 2.2;
+        const tipX = brainGeometry.cx + brainGeometry.sx * (0.08 + col * 0.11) + row * 2.1;
+        const tipY = brainGeometry.cy - brainGeometry.sy * (0.48 - row * 0.12) - col * 1.4;
 
         contacts.push({
-          group,
+          index,
           row,
           col,
-          x,
-          y,
-          baseX: x + depthX,
-          baseY: y + depthY,
-          radius: group === "surface" ? 5 : 3,
-          seed: (row + 1) * 17 + (col + 1) * 23,
+          baseX,
+          baseY,
+          tipX,
+          tipY,
+          seed: 13 + index * 17,
         });
       }
     }
 
-    return contacts;
-  };
-
-  const buildFiber = (start, end, phase) => {
-    const middleX = lerp(start.x, end.x, 0.5);
-    const lift = Math.abs(end.x - start.x) * 0.08 + height * 0.04;
-
-    return {
-      phase,
-      p0: { x: start.x, y: start.y },
-      p1: { x: middleX - 80, y: start.y - lift },
-      p2: { x: middleX + 36, y: end.y - lift * 0.42 },
-      p3: { x: end.x, y: end.y },
-    };
+    return { cols, rows, contacts };
   };
 
   const setPointerHome = () => {
-    pointer.x = width * 0.74;
-    pointer.y = height * 0.26;
+    pointer.x = brainGeometry.cx - brainGeometry.sx * 0.08;
+    pointer.y = brainGeometry.cy - brainGeometry.sy * 0.02;
     pointer.targetX = pointer.x;
     pointer.targetY = pointer.y;
+  };
+
+  const buildNeuralField = () => {
+    neurons = [];
+    edges = [];
+    adjacency = [];
+    collectors = [];
+    bursts = [];
+    electrodeArray = buildElectrodeArray();
+
+    const targetCount = width < 900 ? 110 : 165;
+    let attempts = 0;
+
+    while (neurons.length < targetCount && attempts < targetCount * 40) {
+      const nx = Math.random() * 2.1 - 1.05;
+      const ny = Math.random() * 1.92 - 0.96;
+      attempts += 1;
+
+      if (!brainContainsNormalized(nx, ny)) {
+        continue;
+      }
+
+      const candidate = {
+        x: brainGeometry.cx + nx * brainGeometry.sx,
+        y: brainGeometry.cy + ny * brainGeometry.sy,
+      };
+
+      const tooClose = neurons.some((node) => distance(node, candidate) < (width < 900 ? 18 : 16));
+      if (tooClose) {
+        continue;
+      }
+
+      neurons.push({
+        ...candidate,
+        radius: 1.7 + Math.random() * 1.7,
+        phase: Math.random() * Math.PI * 2,
+        seed: Math.random() * 1000,
+      });
+    }
+
+    const edgeKeys = new Set();
+
+    neurons.forEach((node, index) => {
+      const nearest = neurons
+        .map((neighbor, neighborIndex) => ({
+          neighborIndex,
+          dist: index === neighborIndex ? Number.POSITIVE_INFINITY : distance(node, neighbor),
+        }))
+        .filter(({ dist }) => dist < Math.min(brainGeometry.sx * 0.34, 104))
+        .sort((left, right) => left.dist - right.dist)
+        .slice(0, 4);
+
+      nearest.forEach(({ neighborIndex, dist }) => {
+        const from = Math.min(index, neighborIndex);
+        const to = Math.max(index, neighborIndex);
+        const key = `${from}:${to}`;
+
+        if (edgeKeys.has(key)) {
+          return;
+        }
+
+        edgeKeys.add(key);
+        edges.push({
+          a: from,
+          b: to,
+          length: dist,
+          seed: 29 + edges.length * 11,
+        });
+      });
+    });
+
+    adjacency = Array.from({ length: neurons.length }, () => []);
+    edges.forEach((edge, edgeIndex) => {
+      adjacency[edge.a].push({ to: edge.b, weight: edge.length, edgeIndex });
+      adjacency[edge.b].push({ to: edge.a, weight: edge.length, edgeIndex });
+    });
+
+    const usedNeurons = new Set();
+    const collectorCount = Math.min(electrodeArray.contacts.length, width < 900 ? 8 : 10);
+    collectors = electrodeArray.contacts.slice(0, collectorCount).map((contact, collectorIndex) => {
+      let bestIndex = 0;
+      let bestScore = Number.POSITIVE_INFINITY;
+
+      neurons.forEach((node, nodeIndex) => {
+        if (usedNeurons.has(nodeIndex)) {
+          return;
+        }
+
+        const score = distance(node, { x: contact.tipX, y: contact.tipY }) + Math.abs(node.x - contact.tipX) * 0.12;
+        if (score < bestScore) {
+          bestScore = score;
+          bestIndex = nodeIndex;
+        }
+      });
+
+      usedNeurons.add(bestIndex);
+      const node = neurons[bestIndex];
+      const dx = contact.tipX - node.x;
+      const dy = contact.tipY - node.y;
+      const length = Math.hypot(dx, dy) || 1;
+      const normalX = -dy / length;
+      const normalY = dx / length;
+      const lift = Math.min(28, length * 0.2);
+
+      return {
+        collectorIndex,
+        contactIndex: contact.index,
+        nodeIndex: bestIndex,
+        contact,
+        curveA: {
+          x: lerp(node.x, contact.tipX, 0.28) + normalX * lift,
+          y: lerp(node.y, contact.tipY, 0.28) + normalY * lift - 14,
+        },
+        curveB: {
+          x: lerp(node.x, contact.tipX, 0.72) + normalX * lift * 0.54,
+          y: lerp(node.y, contact.tipY, 0.72) + normalY * lift * 0.54 - 8,
+        },
+      };
+    });
   };
 
   const rebuild = () => {
@@ -230,148 +415,173 @@ const initializeNeuralField = (canvas) => {
     context.scale(dpr, dpr);
 
     brainGeometry = {
-      cx: width * 0.72,
-      cy: height * 0.28,
-      sx: width * 0.18,
-      sy: height * 0.13,
+      cx: width * (width < 900 ? 0.54 : 0.61),
+      cy: height * (width < 900 ? 0.29 : 0.34),
+      sx: Math.min(width * (width < 900 ? 0.31 : 0.24), 420),
+      sy: Math.min(height * (width < 900 ? 0.19 : 0.22), 250),
     };
 
-    intracorticalArray = buildPerspectiveArray({
-      originX: brainGeometry.cx - brainGeometry.sx * 0.32,
-      originY: brainGeometry.cy - brainGeometry.sy * 0.14,
-      cols: 6,
-      rows: 6,
-      stepX: 18,
-      stepY: 12.5,
-      skewX: 4.2,
-      skewY: 2.2,
-      depthX: 6,
-      depthY: 11,
-      group: "intracortical",
-    });
-
-    surfaceArray = buildPerspectiveArray({
-      originX: width * 0.12,
-      originY: height * 0.77,
-      cols: 10,
-      rows: 4,
-      stepX: 34,
-      stepY: 14,
-      skewX: 11,
-      skewY: 2.4,
-      depthX: 9,
-      depthY: 8,
-      group: "surface",
-    });
-
-    const sourceContacts = [0, 5, 10, 17, 24, 31]
-      .map((index) => intracorticalArray[index])
-      .filter(Boolean);
-    const targetContacts = [1, 6, 10, 15, 23, 31]
-      .map((index) => surfaceArray[index])
-      .filter(Boolean);
-
-    fiberCurves = sourceContacts.map((contact, index) =>
-      buildFiber(
-        { x: contact.x, y: contact.y },
-        { x: targetContacts[index].x, y: targetContacts[index].y },
-        index * 0.19
-      )
-    );
-
-    signalLanes = [
-      {
-        baseY: height * 0.15,
-        amplitude: 16,
-        width: 1.9,
-        speed: 0.0018,
-        color: "rgba(58, 166, 188, 0.34)",
-      },
-      {
-        baseY: height * 0.22,
-        amplitude: 11,
-        width: 1.4,
-        speed: 0.0014,
-        color: "rgba(103, 212, 224, 0.28)",
-      },
-      {
-        baseY: height * 0.68,
-        amplitude: 8,
-        width: 1.15,
-        speed: 0.0012,
-        color: "rgba(150, 100, 63, 0.22)",
-      },
-    ];
-
+    buildNeuralField();
     setPointerHome();
   };
 
-  const sampleLaneY = (lane, x, time) => {
-    const pointerDistance = x - pointer.x;
-    const pointerEnvelope = Math.exp(-(pointerDistance * pointerDistance) / 54000);
-    const wave =
-      Math.sin(x * 0.011 + time * lane.speed + lane.baseY * 0.0024) * lane.amplitude +
-      Math.sin(x * 0.0048 + time * lane.speed * 0.62) * lane.amplitude * 0.24;
-    const pointerLift = (pointer.y - lane.baseY) * pointerEnvelope * 0.16;
+  const getNearestNeuronIndex = (x, y) => {
+    let bestIndex = 0;
+    let bestDistance = Number.POSITIVE_INFINITY;
 
-    return lane.baseY + wave + pointerLift;
+    neurons.forEach((node, index) => {
+      const currentDistance = Math.hypot(node.x - x, node.y - y);
+      if (currentDistance < bestDistance) {
+        bestDistance = currentDistance;
+        bestIndex = index;
+      }
+    });
+
+    return bestIndex;
   };
 
-  const drawHudLabel = (x, y, title, detail, align = "left") => {
-    context.save();
-    context.textAlign = align;
-    context.font = "500 10px 'IBM Plex Mono', monospace";
-    context.fillStyle = "rgba(16, 61, 68, 0.54)";
-    context.fillText(title, x, y);
-    context.font = "500 12px 'IBM Plex Mono', monospace";
-    context.fillStyle = "rgba(16, 61, 68, 0.82)";
-    context.fillText(detail, x, y + 18);
-    context.restore();
+  const getHoverFocus = () => {
+    const fallback = {
+      x: brainGeometry.cx - brainGeometry.sx * 0.08,
+      y: brainGeometry.cy - brainGeometry.sy * 0.04,
+    };
+    const index = neurons.length
+      ? getNearestNeuronIndex(pointer.active ? pointer.x : fallback.x, pointer.active ? pointer.y : fallback.y)
+      : 0;
+    const node = neurons[index] || fallback;
+
+    return {
+      x: node.x,
+      y: node.y,
+      intensity: pointer.active ? 1 : 0.44,
+    };
   };
 
-  const traceBrainPath = (scale = 1, offsetX = 0, offsetY = 0) => {
+  const createBurst = (sourceX, sourceY) => {
+    if (!neurons.length) {
+      return;
+    }
+
+    const sourceIndex = getNearestNeuronIndex(sourceX, sourceY);
+    const nodeTimes = Array.from({ length: neurons.length }, () => Number.POSITIVE_INFINITY);
+    const parents = Array.from({ length: neurons.length }, () => -1);
+    const visited = Array.from({ length: neurons.length }, () => false);
+    nodeTimes[sourceIndex] = 0;
+
+    for (let step = 0; step < neurons.length; step += 1) {
+      let current = -1;
+      let currentTime = Number.POSITIVE_INFINITY;
+
+      for (let index = 0; index < neurons.length; index += 1) {
+        if (!visited[index] && nodeTimes[index] < currentTime) {
+          current = index;
+          currentTime = nodeTimes[index];
+        }
+      }
+
+      if (current === -1) {
+        break;
+      }
+
+      visited[current] = true;
+      adjacency[current].forEach(({ to, weight }) => {
+        const nextTime = currentTime + 40 + weight * 4.8;
+        if (nextTime < nodeTimes[to]) {
+          nodeTimes[to] = nextTime;
+          parents[to] = current;
+        }
+      });
+    }
+
+    const collectorSchedule = collectors
+      .map((collector) => {
+        const reachTime = nodeTimes[collector.nodeIndex];
+        if (!Number.isFinite(reachTime)) {
+          return null;
+        }
+
+        return {
+          collectorIndex: collector.collectorIndex,
+          launchAt: reachTime + 140 + collector.collectorIndex * 34,
+        };
+      })
+      .filter(Boolean);
+
+    const maxTime = nodeTimes.reduce(
+      (maximum, value) => (Number.isFinite(value) ? Math.max(maximum, value) : maximum),
+      0
+    );
+
+    bursts.push({
+      start: performance.now(),
+      sourceIndex,
+      nodeTimes,
+      parents,
+      collectorSchedule,
+      duration: maxTime + 1400,
+    });
+
+    bursts = bursts.slice(-3);
+  };
+
+  const getNodeBurstIntensity = (burst, nodeIndex, elapsed) => {
+    const fireAt = burst.nodeTimes[nodeIndex];
+    if (!Number.isFinite(fireAt)) {
+      return 0;
+    }
+
+    const waveFront = Math.exp(-((elapsed - fireAt) ** 2) / 18000);
+    const tail = elapsed > fireAt ? Math.exp(-(elapsed - fireAt) / 480) * 0.74 : 0;
+    const sourceBoost = nodeIndex === burst.sourceIndex ? Math.exp(-(elapsed - fireAt) / 260) * 0.46 : 0;
+
+    return Math.max(waveFront * 1.18, tail + sourceBoost);
+  };
+
+  const drawPulseSegment = (start, end, progress, widthScale) => {
+    const current = sampleBridge(start, end, progress, 0.14);
+    const previous = sampleBridge(start, end, Math.max(progress - 0.05, 0), 0.14);
+    const glow = context.createRadialGradient(current.x, current.y, 0, current.x, current.y, 24);
+    glow.addColorStop(0, "rgba(130, 245, 255, 0.62)");
+    glow.addColorStop(1, "rgba(130, 245, 255, 0)");
+    context.fillStyle = glow;
+    context.beginPath();
+    context.arc(current.x, current.y, 24, 0, Math.PI * 2);
+    context.fill();
+
+    context.strokeStyle = "rgba(130, 245, 255, 0.82)";
+    context.lineWidth = 2 * widthScale;
+    context.beginPath();
+    context.moveTo(previous.x, previous.y);
+    context.lineTo(current.x, current.y);
+    context.stroke();
+  };
+
+  const drawBackdrop = (time) => {
     const { cx, cy, sx, sy } = brainGeometry;
-    context.moveTo(cx - sx * 0.92 * scale + offsetX, cy + sy * 0.08 * scale + offsetY);
-    context.bezierCurveTo(
-      cx - sx * 1.12 * scale + offsetX,
-      cy - sy * 0.62 * scale + offsetY,
-      cx - sx * 0.44 * scale + offsetX,
-      cy - sy * 1.08 * scale + offsetY,
-      cx + sx * 0.14 * scale + offsetX,
-      cy - sy * 0.92 * scale + offsetY
-    );
-    context.bezierCurveTo(
-      cx + sx * 0.9 * scale + offsetX,
-      cy - sy * 0.78 * scale + offsetY,
-      cx + sx * 1.06 * scale + offsetX,
-      cy - sy * 0.08 * scale + offsetY,
-      cx + sx * 0.92 * scale + offsetX,
-      cy + sy * 0.18 * scale + offsetY
-    );
-    context.bezierCurveTo(
-      cx + sx * 0.82 * scale + offsetX,
-      cy + sy * 0.74 * scale + offsetY,
-      cx + sx * 0.16 * scale + offsetX,
-      cy + sy * 0.94 * scale + offsetY,
-      cx - sx * 0.42 * scale + offsetX,
-      cy + sy * 0.88 * scale + offsetY
-    );
-    context.bezierCurveTo(
-      cx - sx * 1.02 * scale + offsetX,
-      cy + sy * 0.62 * scale + offsetY,
-      cx - sx * 1.08 * scale + offsetX,
-      cy + sy * 0.24 * scale + offsetY,
-      cx - sx * 0.92 * scale + offsetX,
-      cy + sy * 0.08 * scale + offsetY
-    );
-  };
+    const mainGlow = context.createRadialGradient(cx, cy, 0, cx, cy, sx * 1.36);
+    mainGlow.addColorStop(0, "rgba(93, 223, 255, 0.16)");
+    mainGlow.addColorStop(0.58, "rgba(93, 223, 255, 0.06)");
+    mainGlow.addColorStop(1, "rgba(93, 223, 255, 0)");
+    context.fillStyle = mainGlow;
+    context.beginPath();
+    context.arc(cx, cy, sx * 1.36, 0, Math.PI * 2);
+    context.fill();
 
-  const drawSignalLanes = (time) => {
-    signalLanes.forEach((lane, laneIndex) => {
+    const lowField = context.createLinearGradient(0, cy + sy * 0.42, width, cy + sy * 0.82);
+    lowField.addColorStop(0, "rgba(64, 201, 228, 0)");
+    lowField.addColorStop(0.32, "rgba(64, 201, 228, 0.08)");
+    lowField.addColorStop(0.68, "rgba(64, 201, 228, 0.12)");
+    lowField.addColorStop(1, "rgba(64, 201, 228, 0)");
+    context.strokeStyle = lowField;
+    context.lineWidth = 1.2;
+
+    for (let lane = 0; lane < 3; lane += 1) {
       context.beginPath();
-
-      for (let x = -40; x <= width + 40; x += 14) {
-        const y = sampleLaneY(lane, x, time);
+      for (let x = -40; x <= width + 40; x += 16) {
+        const wave =
+          Math.sin(x * 0.008 + time * 0.0012 + lane * 1.4) * (10 + lane * 4) +
+          Math.sin(x * 0.0046 + time * 0.0006 + lane * 0.7) * 4;
+        const y = cy + sy * (0.56 + lane * 0.18) + wave;
 
         if (x === -40) {
           context.moveTo(x, y);
@@ -379,137 +589,224 @@ const initializeNeuralField = (canvas) => {
           context.lineTo(x, y);
         }
       }
-
-      context.strokeStyle = lane.color;
-      context.lineWidth = lane.width;
-      context.stroke();
-
-      for (let pulse = 0; pulse < 3; pulse += 1) {
-        const progress = (time * 0.00008 * (1 + laneIndex * 0.12) + pulse * 0.31 + laneIndex * 0.08) % 1;
-        const x = progress * (width + 120) - 60;
-        const y = sampleLaneY(lane, x, time);
-        const glow = context.createRadialGradient(x, y, 0, x, y, 32);
-        glow.addColorStop(0, "rgba(58, 166, 188, 0.34)");
-        glow.addColorStop(1, "rgba(58, 166, 188, 0)");
-        context.fillStyle = glow;
-        context.beginPath();
-        context.arc(x, y, 32, 0, Math.PI * 2);
-        context.fill();
-
-        context.fillStyle = "rgba(16, 61, 68, 0.72)";
-        context.beginPath();
-        context.arc(x, y, 2.8, 0, Math.PI * 2);
-        context.fill();
-      }
-    });
-
-    context.save();
-    context.strokeStyle = "rgba(16, 61, 68, 0.18)";
-    context.lineWidth = 1;
-    const spikeBase = height * 0.245;
-    for (let spike = 0; spike < 18; spike += 1) {
-      const x = width * 0.53 + spike * 22;
-      const amplitude = 8 + Math.sin(time * 0.004 + spike * 0.9) * 7;
-      context.beginPath();
-      context.moveTo(x, spikeBase + amplitude * 0.28);
-      context.lineTo(x, spikeBase - amplitude);
       context.stroke();
     }
-    context.restore();
   };
 
-  const drawBrainShell = (time) => {
-    context.save();
-
+  const drawBrainVolume = (time) => {
     const { cx, cy, sx, sy } = brainGeometry;
-    const fill = context.createRadialGradient(cx, cy, 0, cx, cy, sx * 1.24);
-    fill.addColorStop(0, "rgba(58, 166, 188, 0.12)");
-    fill.addColorStop(0.58, "rgba(58, 166, 188, 0.05)");
-    fill.addColorStop(1, "rgba(58, 166, 188, 0)");
+    const hover = getHoverFocus();
 
+    context.save();
     context.beginPath();
     traceBrainPath();
     context.closePath();
-    context.fillStyle = fill;
+
+    const shellFill = context.createRadialGradient(cx - sx * 0.2, cy - sy * 0.24, sx * 0.08, cx, cy, sx * 1.18);
+    shellFill.addColorStop(0, "rgba(167, 248, 255, 0.16)");
+    shellFill.addColorStop(0.34, "rgba(90, 212, 236, 0.12)");
+    shellFill.addColorStop(0.72, "rgba(32, 99, 131, 0.08)");
+    shellFill.addColorStop(1, "rgba(16, 61, 68, 0)");
+    context.fillStyle = shellFill;
     context.fill();
-    context.strokeStyle = "rgba(16, 61, 68, 0.18)";
-    context.lineWidth = 2.2;
+    context.strokeStyle = "rgba(109, 232, 255, 0.24)";
+    context.lineWidth = 2.4;
     context.stroke();
 
     context.beginPath();
-    traceBrainPath(1.04, 7, -3);
-    context.strokeStyle = "rgba(58, 166, 188, 0.16)";
+    traceBrainPath(1.05, sx * 0.04, -sy * 0.03);
+    context.strokeStyle = "rgba(109, 232, 255, 0.1)";
     context.lineWidth = 1;
     context.stroke();
 
-    for (let line = 0; line < 6; line += 1) {
-      const verticalMix = line / 5;
-      const startX = cx - sx * (0.76 - line * 0.05);
-      const startY = cy - sy * (0.48 - verticalMix * 0.94);
-      const endX = cx + sx * (0.78 - line * 0.07);
-      const endY = cy - sy * (0.36 - verticalMix * 0.98);
-      const lift = Math.sin(time * 0.0014 + line * 0.7) * 8;
+    context.clip();
+
+    const hoverGlow = context.createRadialGradient(hover.x, hover.y, 0, hover.x, hover.y, sx * 0.44);
+    hoverGlow.addColorStop(0, `rgba(130, 245, 255, ${0.24 * hover.intensity})`);
+    hoverGlow.addColorStop(0.4, `rgba(130, 245, 255, ${0.12 * hover.intensity})`);
+    hoverGlow.addColorStop(1, "rgba(130, 245, 255, 0)");
+    context.fillStyle = hoverGlow;
+    context.fillRect(cx - sx * 1.4, cy - sy * 1.4, sx * 2.8, sy * 2.8);
+
+    const depthWash = context.createLinearGradient(cx, cy - sy, cx, cy + sy);
+    depthWash.addColorStop(0, "rgba(255, 255, 255, 0.06)");
+    depthWash.addColorStop(0.48, "rgba(52, 168, 195, 0.05)");
+    depthWash.addColorStop(1, "rgba(10, 35, 49, 0.1)");
+    context.fillStyle = depthWash;
+    context.fillRect(cx - sx * 1.2, cy - sy * 1.2, sx * 2.4, sy * 2.4);
+
+    for (let fold = 0; fold < 13; fold += 1) {
+      const progress = fold / 12;
+      const startX = cx - sx * (0.78 - progress * 0.16);
+      const startY = cy - sy * (0.55 - progress * 1.02);
+      const endX = cx + sx * (0.78 - progress * 0.12);
+      const endY = cy - sy * (0.5 - progress * 1.08);
+      const drift = Math.sin(time * 0.001 + fold * 0.62) * 9;
 
       context.beginPath();
       context.moveTo(startX, startY);
       context.bezierCurveTo(
-        cx - sx * 0.22 + line * 8,
-        cy - sy * (0.88 - verticalMix * 0.36) + lift,
-        cx + sx * 0.18 - line * 6,
-        cy + sy * (-0.72 + verticalMix * 0.66) - lift * 0.7,
+        cx - sx * 0.24 + fold * 7,
+        cy - sy * (0.96 - progress * 0.18) + drift,
+        cx + sx * 0.2 - fold * 4,
+        cy + sy * (-0.78 + progress * 0.62) - drift * 0.7,
         endX,
         endY
       );
-      context.strokeStyle = `rgba(58, 166, 188, ${0.14 + line * 0.015})`;
-      context.lineWidth = 1;
+      context.strokeStyle = `rgba(122, 236, 255, ${0.05 + (1 - Math.abs(progress - 0.5)) * 0.08})`;
+      context.lineWidth = 1.1;
       context.stroke();
     }
 
-    context.beginPath();
-    context.arc(cx + sx * 0.54, cy - sy * 0.12, sy * 0.42, -Math.PI * 0.2, Math.PI * 0.84);
-    context.strokeStyle = "rgba(103, 212, 224, 0.2)";
-    context.lineWidth = 1.2;
-    context.stroke();
+    bursts.forEach((burst) => {
+      const elapsed = time - burst.start;
+      if (elapsed < 0 || elapsed > burst.duration) {
+        return;
+      }
+
+      const source = neurons[burst.sourceIndex];
+      const ringRadius = 18 + elapsed * 0.19;
+      const ringAlpha = clamp(0.32 - elapsed / 2200, 0, 0.32);
+
+      context.beginPath();
+      context.arc(source.x, source.y, ringRadius, 0, Math.PI * 2);
+      context.strokeStyle = `rgba(130, 245, 255, ${ringAlpha})`;
+      context.lineWidth = 1.4;
+      context.stroke();
+    });
 
     context.restore();
-
-    context.save();
-    context.strokeStyle = "rgba(16, 61, 68, 0.2)";
-    context.lineWidth = 1;
-    context.beginPath();
-    context.moveTo(cx + sx * 0.2, cy - sy * 0.58);
-    context.lineTo(cx + sx * 0.74, cy - sy * 0.92);
-    context.lineTo(cx + sx * 0.96, cy - sy * 0.92);
-    context.stroke();
-    context.restore();
-
-    drawHudLabel(cx + sx * 0.98, cy - sy * 0.98, "Intracortical Array", "Utah-style implant", "left");
   };
 
-  const drawArrayPlate = (contacts, options, time) => {
-    const { cols, rows, kind, labelX, labelY, labelTitle, labelDetail } = options;
+  const drawNeuralMesh = (time) => {
+    const hover = getHoverFocus();
+
+    edges.forEach((edge) => {
+      const start = neurons[edge.a];
+      const end = neurons[edge.b];
+      const midpoint = {
+        x: lerp(start.x, end.x, 0.5),
+        y: lerp(start.y, end.y, 0.5),
+      };
+      const hoverGain = clamp(1 - distance(midpoint, hover) / 180, 0, 1);
+      let burstGain = 0;
+
+      bursts.forEach((burst) => {
+        const elapsed = time - burst.start;
+        const edgeTime = (burst.nodeTimes[edge.a] + burst.nodeTimes[edge.b]) * 0.5;
+        if (!Number.isFinite(edgeTime)) {
+          return;
+        }
+
+        burstGain = Math.max(burstGain, Math.exp(-((elapsed - edgeTime) ** 2) / 32000));
+      });
+
+      context.strokeStyle = `rgba(110, 232, 255, ${0.035 + hoverGain * 0.08 + burstGain * 0.16})`;
+      context.lineWidth = 0.85 + burstGain * 0.8;
+      context.beginPath();
+      context.moveTo(start.x, start.y);
+      context.lineTo(end.x, end.y);
+      context.stroke();
+    });
+
+    bursts.forEach((burst) => {
+      const elapsed = time - burst.start;
+      if (elapsed < 0 || elapsed > burst.duration) {
+        return;
+      }
+
+      burst.parents.forEach((parentIndex, nodeIndex) => {
+        if (parentIndex < 0) {
+          return;
+        }
+
+        const startTime = burst.nodeTimes[parentIndex];
+        const endTime = burst.nodeTimes[nodeIndex];
+        if (!Number.isFinite(startTime) || !Number.isFinite(endTime)) {
+          return;
+        }
+
+        const localTime = elapsed - startTime;
+        const travelTime = Math.max(80, endTime - startTime);
+        if (localTime < 0 || localTime > travelTime + 120) {
+          return;
+        }
+
+        drawPulseSegment(neurons[parentIndex], neurons[nodeIndex], clamp(localTime / travelTime, 0, 1), 1);
+      });
+    });
+
+    neurons.forEach((node, index) => {
+      const ambient = 0.18 + 0.18 * Math.sin(time * 0.0018 + node.phase);
+      const hoverGain = clamp(1 - distance(node, hover) / 132, 0, 1);
+      let burstGain = 0;
+
+      bursts.forEach((burst) => {
+        const elapsed = time - burst.start;
+        burstGain = Math.max(burstGain, getNodeBurstIntensity(burst, index, elapsed));
+      });
+
+      const glowRadius = 10 + hoverGain * 16 + burstGain * 26;
+      const glow = context.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowRadius);
+      glow.addColorStop(0, `rgba(140, 246, 255, ${0.18 + hoverGain * 0.18 + burstGain * 0.34})`);
+      glow.addColorStop(1, "rgba(140, 246, 255, 0)");
+      context.fillStyle = glow;
+      context.beginPath();
+      context.arc(node.x, node.y, glowRadius, 0, Math.PI * 2);
+      context.fill();
+
+      context.fillStyle = `rgba(223, 252, 255, ${0.56 + ambient * 0.2 + burstGain * 0.24})`;
+      context.beginPath();
+      context.arc(node.x, node.y, node.radius + hoverGain * 0.8 + burstGain * 1.3, 0, Math.PI * 2);
+      context.fill();
+
+      context.fillStyle = `rgba(21, 54, 72, ${0.5 + burstGain * 0.26})`;
+      context.beginPath();
+      context.arc(node.x, node.y, Math.max(0.9, node.radius * 0.42), 0, Math.PI * 2);
+      context.fill();
+    });
+  };
+
+  const drawElectrodeArray = (time) => {
+    const { contacts, cols, rows } = electrodeArray;
+    if (!contacts.length) {
+      return;
+    }
+
     const topLeft = contacts[0];
     const topRight = contacts[cols - 1];
     const bottomLeft = contacts[(rows - 1) * cols];
     const bottomRight = contacts[contacts.length - 1];
-    const padX = kind === "surface" ? 16 : 8;
-    const padY = kind === "surface" ? 14 : 10;
+    const contactActivity = Array.from({ length: contacts.length }, () => 0);
+
+    bursts.forEach((burst) => {
+      burst.collectorSchedule.forEach((item) => {
+        const phase = time - burst.start - item.launchAt;
+        if (phase < 0 || phase > 760) {
+          return;
+        }
+
+        const collector = collectors[item.collectorIndex];
+        contactActivity[collector.contactIndex] = Math.max(contactActivity[collector.contactIndex], 1 - phase / 760);
+      });
+    });
 
     context.save();
     context.beginPath();
-    context.moveTo(topLeft.baseX - padX, topLeft.baseY - padY);
-    context.lineTo(topRight.baseX + padX, topRight.baseY - padY * 0.4);
-    context.lineTo(bottomRight.baseX + padX * 0.7, bottomRight.baseY + padY);
-    context.lineTo(bottomLeft.baseX - padX, bottomLeft.baseY + padY * 0.7);
+    context.moveTo(topLeft.baseX - 18, topLeft.baseY - 14);
+    context.lineTo(topRight.baseX + 16, topRight.baseY - 8);
+    context.lineTo(bottomRight.baseX + 14, bottomRight.baseY + 10);
+    context.lineTo(bottomLeft.baseX - 16, bottomLeft.baseY + 12);
     context.closePath();
 
     const plateFill = context.createLinearGradient(topLeft.baseX, topLeft.baseY, bottomRight.baseX, bottomRight.baseY);
-    plateFill.addColorStop(0, kind === "surface" ? "rgba(255, 255, 255, 0.24)" : "rgba(255, 255, 255, 0.18)");
-    plateFill.addColorStop(1, kind === "surface" ? "rgba(29, 88, 97, 0.12)" : "rgba(16, 61, 68, 0.1)");
+    plateFill.addColorStop(0, "rgba(255, 255, 255, 0.34)");
+    plateFill.addColorStop(0.48, "rgba(144, 244, 255, 0.18)");
+    plateFill.addColorStop(1, "rgba(19, 69, 88, 0.2)");
     context.fillStyle = plateFill;
     context.fill();
-    context.strokeStyle = kind === "surface" ? "rgba(16, 61, 68, 0.2)" : "rgba(58, 166, 188, 0.2)";
-    context.lineWidth = 1.1;
+    context.strokeStyle = "rgba(122, 236, 255, 0.24)";
+    context.lineWidth = 1.15;
     context.stroke();
 
     for (let row = 0; row < rows; row += 1) {
@@ -518,7 +815,7 @@ const initializeNeuralField = (canvas) => {
       context.beginPath();
       context.moveTo(left.baseX, left.baseY);
       context.lineTo(right.baseX, right.baseY);
-      context.strokeStyle = "rgba(16, 61, 68, 0.08)";
+      context.strokeStyle = "rgba(122, 236, 255, 0.08)";
       context.lineWidth = 1;
       context.stroke();
     }
@@ -529,174 +826,162 @@ const initializeNeuralField = (canvas) => {
       context.beginPath();
       context.moveTo(top.baseX, top.baseY);
       context.lineTo(bottom.baseX, bottom.baseY);
-      context.strokeStyle = "rgba(16, 61, 68, 0.08)";
+      context.strokeStyle = "rgba(122, 236, 255, 0.08)";
       context.lineWidth = 1;
       context.stroke();
     }
 
-    contacts.forEach((contact) => {
-      const pointerDistance = Math.hypot(pointer.x - contact.x, pointer.y - contact.y);
-      const pointerGain = clamp(1 - pointerDistance / (kind === "surface" ? 240 : 180), 0, 1);
-      const scanWave =
-        0.5 +
-        0.5 * Math.sin(time * (kind === "surface" ? 0.0042 : 0.0052) + contact.col * 0.9 - contact.row * 0.7 + contact.seed * 0.04);
-      const intensity = 0.18 + scanWave * 0.42 + pointerGain * 0.46;
-
-      if (kind === "intracortical") {
-        context.beginPath();
-        context.moveTo(contact.baseX, contact.baseY);
-        context.lineTo(contact.x, contact.y);
-        context.strokeStyle = `rgba(16, 61, 68, ${0.16 + intensity * 0.42})`;
-        context.lineWidth = 1.1;
-        context.stroke();
-
-        const tipGlow = context.createRadialGradient(contact.x, contact.y, 0, contact.x, contact.y, 18);
-        tipGlow.addColorStop(0, `rgba(58, 166, 188, ${0.18 + intensity * 0.4})`);
-        tipGlow.addColorStop(1, "rgba(58, 166, 188, 0)");
-        context.fillStyle = tipGlow;
-        context.beginPath();
-        context.arc(contact.x, contact.y, 18, 0, Math.PI * 2);
-        context.fill();
-
-        context.fillStyle = `rgba(13, 52, 58, ${0.5 + intensity * 0.3})`;
-        context.beginPath();
-        context.arc(contact.x, contact.y, contact.radius + intensity * 1.1, 0, Math.PI * 2);
-        context.fill();
-      } else {
-        const padWidth = 12 + intensity * 2.4;
-        const padHeight = 7 + intensity * 1.2;
-        const glow = context.createRadialGradient(contact.x, contact.y, 0, contact.x, contact.y, 20);
-        glow.addColorStop(0, `rgba(150, 100, 63, ${0.14 + intensity * 0.28})`);
-        glow.addColorStop(1, "rgba(150, 100, 63, 0)");
-        context.fillStyle = glow;
-        context.beginPath();
-        context.arc(contact.x, contact.y, 20, 0, Math.PI * 2);
-        context.fill();
-
-        context.fillStyle = `rgba(255, 255, 255, ${0.3 + intensity * 0.16})`;
-        context.strokeStyle = `rgba(150, 100, 63, ${0.18 + intensity * 0.34})`;
-        context.lineWidth = 1;
-        context.beginPath();
-        context.roundRect(contact.x - padWidth / 2, contact.y - padHeight / 2, padWidth, padHeight, 4);
-        context.fill();
-        context.stroke();
+    collectors.forEach((collector) => {
+      const node = neurons[collector.nodeIndex];
+      const target = {
+        x: collector.contact.tipX,
+        y: collector.contact.tipY,
+      };
+      context.beginPath();
+      context.moveTo(node.x, node.y);
+      for (let step = 1; step <= 12; step += 1) {
+        const point = sampleBezier(node, collector.curveA, collector.curveB, target, step / 12);
+        context.lineTo(point.x, point.y);
       }
+      context.strokeStyle = "rgba(122, 236, 255, 0.07)";
+      context.lineWidth = 0.95;
+      context.stroke();
     });
 
-    context.restore();
-    drawHudLabel(labelX, labelY, labelTitle, labelDetail);
-  };
+    contacts.forEach((contact) => {
+      const active = contactActivity[contact.index];
+      const shimmer = 0.24 + 0.18 * Math.sin(time * 0.0026 + contact.seed * 0.17);
 
-  const drawFiberBundles = (time) => {
-    fiberCurves.forEach((fiber, fiberIndex) => {
       context.beginPath();
-      for (let step = 0; step <= 24; step += 1) {
-        const progress = step / 24;
-        const point = sampleBezier(fiber.p0, fiber.p1, fiber.p2, fiber.p3, progress);
-
-        if (step === 0) {
-          context.moveTo(point.x, point.y);
-        } else {
-          context.lineTo(point.x, point.y);
-        }
-      }
-      context.strokeStyle = "rgba(58, 166, 188, 0.14)";
-      context.lineWidth = 1.15;
+      context.moveTo(contact.baseX, contact.baseY);
+      context.lineTo(contact.tipX, contact.tipY);
+      context.strokeStyle = `rgba(122, 236, 255, ${0.1 + shimmer * 0.16 + active * 0.36})`;
+      context.lineWidth = 1.05 + active * 0.9;
       context.stroke();
 
-      for (let pulse = 0; pulse < 2; pulse += 1) {
-        const progress = (time * 0.00012 * (1 + fiberIndex * 0.08) + fiber.phase + pulse * 0.46) % 1;
-        const point = sampleBezier(fiber.p0, fiber.p1, fiber.p2, fiber.p3, progress);
-        const next = sampleBezier(fiber.p0, fiber.p1, fiber.p2, fiber.p3, Math.min(progress + 0.03, 1));
+      const tipGlow = context.createRadialGradient(contact.tipX, contact.tipY, 0, contact.tipX, contact.tipY, 14 + active * 10);
+      tipGlow.addColorStop(0, `rgba(122, 236, 255, ${0.2 + active * 0.34})`);
+      tipGlow.addColorStop(1, "rgba(122, 236, 255, 0)");
+      context.fillStyle = tipGlow;
+      context.beginPath();
+      context.arc(contact.tipX, contact.tipY, 14 + active * 10, 0, Math.PI * 2);
+      context.fill();
 
-        const pulseGlow = context.createRadialGradient(point.x, point.y, 0, point.x, point.y, 18);
-        pulseGlow.addColorStop(0, "rgba(58, 166, 188, 0.32)");
-        pulseGlow.addColorStop(1, "rgba(58, 166, 188, 0)");
-        context.fillStyle = pulseGlow;
-        context.beginPath();
-        context.arc(point.x, point.y, 18, 0, Math.PI * 2);
-        context.fill();
-
-        context.strokeStyle = "rgba(103, 212, 224, 0.42)";
-        context.lineWidth = 2;
-        context.beginPath();
-        context.moveTo(point.x, point.y);
-        context.lineTo(next.x, next.y);
-        context.stroke();
-      }
+      context.fillStyle = `rgba(237, 253, 255, ${0.42 + shimmer * 0.2 + active * 0.22})`;
+      context.beginPath();
+      context.roundRect(contact.baseX - 4.5, contact.baseY - 3.6, 9, 7.2, 3);
+      context.fill();
+      context.strokeStyle = `rgba(122, 236, 255, ${0.18 + active * 0.36})`;
+      context.lineWidth = 1;
+      context.stroke();
     });
+
+    bursts.forEach((burst) => {
+      burst.collectorSchedule.forEach((item) => {
+        const phase = time - burst.start - item.launchAt;
+        if (phase < 0 || phase > 760) {
+          return;
+        }
+
+        const collector = collectors[item.collectorIndex];
+        const node = neurons[collector.nodeIndex];
+        const contact = collector.contact;
+
+        if (phase <= 460) {
+          const progress = clamp(phase / 460, 0, 1);
+          const point = sampleBezier(node, collector.curveA, collector.curveB, { x: contact.tipX, y: contact.tipY }, progress);
+          const previous = sampleBezier(
+            node,
+            collector.curveA,
+            collector.curveB,
+            { x: contact.tipX, y: contact.tipY },
+            Math.max(progress - 0.06, 0)
+          );
+          const glow = context.createRadialGradient(point.x, point.y, 0, point.x, point.y, 24);
+          glow.addColorStop(0, "rgba(130, 245, 255, 0.7)");
+          glow.addColorStop(1, "rgba(130, 245, 255, 0)");
+          context.fillStyle = glow;
+          context.beginPath();
+          context.arc(point.x, point.y, 24, 0, Math.PI * 2);
+          context.fill();
+
+          context.strokeStyle = "rgba(130, 245, 255, 0.86)";
+          context.lineWidth = 2.1;
+          context.beginPath();
+          context.moveTo(previous.x, previous.y);
+          context.lineTo(point.x, point.y);
+          context.stroke();
+        } else {
+          const progress = clamp((phase - 460) / 220, 0, 1);
+          const point = {
+            x: lerp(contact.tipX, contact.baseX, progress),
+            y: lerp(contact.tipY, contact.baseY, progress),
+          };
+          const glow = context.createRadialGradient(point.x, point.y, 0, point.x, point.y, 22);
+          glow.addColorStop(0, "rgba(130, 245, 255, 0.72)");
+          glow.addColorStop(1, "rgba(130, 245, 255, 0)");
+          context.fillStyle = glow;
+          context.beginPath();
+          context.arc(point.x, point.y, 22, 0, Math.PI * 2);
+          context.fill();
+        }
+      });
+    });
+
+    context.restore();
   };
 
-  const drawReticle = (time) => {
-    const alpha = pointer.active ? 0.82 : 0.32;
-    const radius = pointer.active ? 30 : 20;
-
-    context.save();
-    context.translate(pointer.x, pointer.y);
-    context.strokeStyle = `rgba(16, 61, 68, ${alpha})`;
-    context.lineWidth = 1.2;
-    context.setLineDash([7, 8]);
+  const drawPointerField = (time) => {
+    const hover = getHoverFocus();
+    const pulseAge = pointer.pulseAt ? time - pointer.pulseAt : Number.POSITIVE_INFINITY;
+    const haloRadius = pointer.active ? 36 : 24;
+    const field = context.createRadialGradient(pointer.x, pointer.y, 0, pointer.x, pointer.y, 88);
+    field.addColorStop(0, `rgba(130, 245, 255, ${pointer.active ? 0.16 : 0.08})`);
+    field.addColorStop(1, "rgba(130, 245, 255, 0)");
+    context.fillStyle = field;
     context.beginPath();
-    context.arc(0, 0, radius, 0, Math.PI * 2);
-    context.stroke();
-    context.setLineDash([]);
-
-    context.strokeStyle = `rgba(58, 166, 188, ${alpha})`;
-    context.beginPath();
-    context.arc(0, 0, radius + 12, Math.PI * 0.18 + time * 0.0012, Math.PI * 0.92 + time * 0.0012);
-    context.stroke();
-    context.beginPath();
-    context.arc(0, 0, radius + 20, -Math.PI * 0.84 - time * 0.001, -Math.PI * 0.18 - time * 0.001);
-    context.stroke();
-
-    context.beginPath();
-    context.moveTo(-radius - 12, 0);
-    context.lineTo(radius + 12, 0);
-    context.moveTo(0, -radius - 12);
-    context.lineTo(0, radius + 12);
-    context.stroke();
-
-    const glow = context.createRadialGradient(0, 0, 0, 0, 0, 80);
-    glow.addColorStop(0, "rgba(58, 166, 188, 0.22)");
-    glow.addColorStop(1, "rgba(58, 166, 188, 0)");
-    context.fillStyle = glow;
-    context.beginPath();
-    context.arc(0, 0, 80, 0, Math.PI * 2);
+    context.arc(pointer.x, pointer.y, 88, 0, Math.PI * 2);
     context.fill();
-    context.restore();
+
+    context.strokeStyle = `rgba(122, 236, 255, ${pointer.active ? 0.42 : 0.18})`;
+    context.lineWidth = 1.1;
+    context.beginPath();
+    context.arc(pointer.x, pointer.y, haloRadius + Math.sin(time * 0.006) * 1.8, 0, Math.PI * 2);
+    context.stroke();
+
+    if (pointer.active && !brainContainsPoint(pointer.x, pointer.y)) {
+      context.strokeStyle = "rgba(122, 236, 255, 0.18)";
+      context.lineWidth = 1;
+      context.setLineDash([6, 7]);
+      context.beginPath();
+      context.moveTo(pointer.x, pointer.y);
+      context.lineTo(hover.x, hover.y);
+      context.stroke();
+      context.setLineDash([]);
+    }
+
+    if (pulseAge >= 0 && pulseAge < 520) {
+      const rippleRadius = 18 + pulseAge * 0.14;
+      const rippleAlpha = clamp(0.36 - pulseAge / 1600, 0, 0.36);
+      context.beginPath();
+      context.arc(pointer.x, pointer.y, rippleRadius, 0, Math.PI * 2);
+      context.strokeStyle = `rgba(130, 245, 255, ${rippleAlpha})`;
+      context.lineWidth = 1.4;
+      context.stroke();
+    }
   };
 
   const frame = (time) => {
     context.clearRect(0, 0, width, height);
-    context.globalCompositeOperation = "source-over";
+    pointer.x += (pointer.targetX - pointer.x) * 0.12;
+    pointer.y += (pointer.targetY - pointer.y) * 0.12;
+    bursts = bursts.filter((burst) => time - burst.start < burst.duration);
 
-    drawSignalLanes(time);
-
-    pointer.x += (pointer.targetX - pointer.x) * 0.08;
-    pointer.y += (pointer.targetY - pointer.y) * 0.08;
-
-    drawBrainShell(time);
-    drawFiberBundles(time);
-    drawArrayPlate(intracorticalArray, {
-      cols: 6,
-      rows: 6,
-      kind: "intracortical",
-      labelX: brainGeometry.cx + brainGeometry.sx * 0.74,
-      labelY: brainGeometry.cy - brainGeometry.sy * 0.34,
-      labelTitle: "Implant Interface",
-      labelDetail: "6 x 6 active contacts",
-    }, time);
-    drawArrayPlate(surfaceArray, {
-      cols: 10,
-      rows: 4,
-      kind: "surface",
-      labelX: width * 0.11,
-      labelY: height * 0.7,
-      labelTitle: "Decoder Readout",
-      labelDetail: "ECoG / signal matrix",
-    }, time);
-
-    drawReticle(time);
+    drawBackdrop(time);
+    drawBrainVolume(time);
+    drawNeuralMesh(time);
+    drawElectrodeArray(time);
+    drawPointerField(time);
 
     if (!reducedMotion) {
       frameId = requestAnimationFrame(frame);
@@ -709,10 +994,17 @@ const initializeNeuralField = (canvas) => {
     pointer.active = true;
   };
 
+  const triggerBurst = (event) => {
+    pointer.targetX = event.clientX;
+    pointer.targetY = event.clientY;
+    pointer.active = true;
+    pointer.pulseAt = performance.now();
+    createBurst(event.clientX, event.clientY);
+  };
+
   const resetPointer = () => {
     pointer.active = false;
-    pointer.targetX = width * 0.72;
-    pointer.targetY = height * 0.28;
+    setPointerHome();
   };
 
   rebuild();
@@ -725,6 +1017,7 @@ const initializeNeuralField = (canvas) => {
   frameId = requestAnimationFrame(frame);
   window.addEventListener("resize", rebuild);
   window.addEventListener("pointermove", movePointer, { passive: true });
+  window.addEventListener("pointerdown", triggerBurst, { passive: true });
   document.addEventListener("pointerleave", resetPointer);
   window.addEventListener("blur", resetPointer);
 };
