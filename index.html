@@ -15,10 +15,18 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Instrument+Sans:wght@400;500;600;700&amp;display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=20260420-keywords" />
+    <link rel="stylesheet" href="./styles.css?v=20260421-neural" />
   </head>
   <body>
     <div class="site-shell">
+      <div class="neural-stage" aria-hidden="true">
+        <canvas class="neural-canvas" id="neural-canvas"></canvas>
+        <div class="neural-halo neural-halo-one"></div>
+        <div class="neural-halo neural-halo-two"></div>
+        <div class="neural-hud neural-hud-one"></div>
+        <div class="neural-hud neural-hud-two"></div>
+      </div>
+
       <div class="glow glow-one" aria-hidden="true"></div>
       <div class="glow glow-two" aria-hidden="true"></div>
 
@@ -64,6 +72,7 @@
               <a class="button primary" href="#plan">Research Plan</a>
               <a class="button secondary" href="#publications">Publications</a>
             </div>
+
           </div>
 
           <aside class="hero-panel" data-reveal>
@@ -639,6 +648,6 @@
       </footer>
     </div>
 
-    <script src="./script.js?v=20260420-phd"></script>
+    <script src="./script.js?v=20260421-neural"></script>
   </body>
 </html>
