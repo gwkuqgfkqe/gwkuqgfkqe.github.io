@@ -150,6 +150,7 @@ const initializeNeuralField = (canvas) => {
   let brainMaskHeight = 0;
   let neurons = [];
   let edges = [];
+  let adjacency = [];
   let bursts = [];
 
   const lerp = (start, end, amount) => start + (end - start) * amount;
@@ -175,6 +176,33 @@ const initializeNeuralField = (canvas) => {
     maskContext.clearRect(0, 0, brainMaskWidth, brainMaskHeight);
     maskContext.drawImage(brainImage, 0, 0, brainMaskWidth, brainMaskHeight);
     brainMaskData = maskContext.getImageData(0, 0, brainMaskWidth, brainMaskHeight).data;
+  };
+
+  const getBrainPixelInfo = (u, v) => {
+    if (!brainMaskData || !brainMaskWidth || !brainMaskHeight) {
+      return {
+        alpha: brainContainsRelative(u, v) ? 1 : 0,
+        luminance: 0.62,
+        signal: 0.42,
+      };
+    }
+
+    const maskX = clamp(Math.round(u * (brainMaskWidth - 1)), 0, brainMaskWidth - 1);
+    const maskY = clamp(Math.round(v * (brainMaskHeight - 1)), 0, brainMaskHeight - 1);
+    const pixelIndex = (maskY * brainMaskWidth + maskX) * 4;
+    const red = brainMaskData[pixelIndex];
+    const green = brainMaskData[pixelIndex + 1];
+    const blue = brainMaskData[pixelIndex + 2];
+    const alpha = brainMaskData[pixelIndex + 3] / 255;
+    const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
+    const cyan = clamp(((green * 0.58 + blue * 0.9) - red * 0.18) / 255, 0, 1);
+    const signal = clamp(luminance * 0.52 + cyan * 0.84 - 0.22, 0, 1) * alpha;
+
+    return {
+      alpha,
+      luminance,
+      signal,
+    };
   };
 
   const brainContainsRelative = (u, v) => {
@@ -222,36 +250,58 @@ const initializeNeuralField = (canvas) => {
     pointer.targetY = pointer.y;
   };
 
-  const sampleBrainPoint = () => {
+  const sampleBrainPoint = (preferSignal = false) => {
     if (!brainGeometry) {
-      return { x: width * 0.5, y: height * 0.25 };
+      return {
+        x: width * 0.5,
+        y: height * 0.25,
+        signal: 0.42,
+        luminance: 0.62,
+      };
     }
 
-    for (let attempt = 0; attempt < 160; attempt += 1) {
+    for (let attempt = 0; attempt < 220; attempt += 1) {
       const x = brainGeometry.left + Math.random() * brainGeometry.width;
       const y = brainGeometry.top + Math.random() * brainGeometry.height;
-      if (brainContainsPoint(x, y)) {
-        return { x, y };
+      const u = (x - brainGeometry.left) / brainGeometry.width;
+      const v = (y - brainGeometry.top) / brainGeometry.height;
+
+      if (!brainContainsRelative(u, v)) {
+        continue;
+      }
+
+      const pixel = getBrainPixelInfo(u, v);
+      if (!preferSignal || Math.random() < 0.16 + pixel.signal * 1.28) {
+        return {
+          x,
+          y,
+          signal: pixel.signal,
+          luminance: pixel.luminance,
+        };
       }
     }
 
     return {
       x: brainGeometry.left + brainGeometry.width * 0.48,
       y: brainGeometry.top + brainGeometry.height * 0.42,
+      signal: 0.54,
+      luminance: 0.72,
     };
   };
 
   const buildNeuralField = () => {
     neurons = [];
     edges = [];
+    adjacency = [];
     bursts = [];
 
-    const targetCount = width < 900 ? 150 : 230;
-    const minSpacing = width < 900 ? 15 : 13;
+    const targetCount = width < 900 ? 180 : 300;
+    const signalTarget = Math.round(targetCount * 0.74);
+    const minSpacing = width < 900 ? 14 : 12;
     let attempts = 0;
 
-    while (neurons.length < targetCount && attempts < targetCount * 60) {
-      const candidate = sampleBrainPoint();
+    while (neurons.length < targetCount && attempts < targetCount * 90) {
+      const candidate = sampleBrainPoint(neurons.length < signalTarget);
       attempts += 1;
 
       if (neurons.some((node) => distance(node, candidate) < minSpacing)) {
@@ -260,9 +310,11 @@ const initializeNeuralField = (canvas) => {
 
       neurons.push({
         ...candidate,
-        radius: 1.2 + Math.random() * 1.8,
+        radius: 0.9 + candidate.signal * 2.7 + Math.random() * 0.9,
         twinkle: Math.random() * Math.PI * 2,
         seed: Math.random() * 1000,
+        signal: candidate.signal,
+        luminance: candidate.luminance,
       });
     }
 
@@ -272,12 +324,13 @@ const initializeNeuralField = (canvas) => {
         .map((neighbor, neighborIndex) => ({
           neighborIndex,
           dist: index === neighborIndex ? Number.POSITIVE_INFINITY : distance(node, neighbor),
+          signal: (node.signal + neighbor.signal) * 0.5,
         }))
-        .filter(({ dist }) => dist < Math.min(brainGeometry.width * 0.12, 92))
-        .sort((left, right) => left.dist - right.dist)
-        .slice(0, width < 900 ? 3 : 4);
+        .filter(({ dist }) => dist < Math.min(brainGeometry.width * 0.14, 118))
+        .sort((left, right) => (left.dist - left.signal * 18) - (right.dist - right.signal * 18))
+        .slice(0, width < 900 ? 4 : 5);
 
-      nearest.forEach(({ neighborIndex, dist }) => {
+      nearest.forEach(({ neighborIndex, dist, signal }) => {
         const from = Math.min(index, neighborIndex);
         const to = Math.max(index, neighborIndex);
         const key = `${from}:${to}`;
@@ -291,9 +344,48 @@ const initializeNeuralField = (canvas) => {
           a: from,
           b: to,
           length: dist,
+          signal,
         });
       });
     });
+
+    adjacency = Array.from({ length: neurons.length }, () => []);
+    edges.forEach((edge, edgeIndex) => {
+      const weight = edge.length * (1.82 - edge.signal * 0.32);
+      adjacency[edge.a].push({ neighborIndex: edge.b, edgeIndex, weight });
+      adjacency[edge.b].push({ neighborIndex: edge.a, edgeIndex, weight });
+    });
+  };
+
+  const buildPropagationTimes = (sourceIndex) => {
+    const nodeTimes = Array.from({ length: neurons.length }, () => Number.POSITIVE_INFINITY);
+    const frontier = [{ index: sourceIndex, time: 0 }];
+    nodeTimes[sourceIndex] = 0;
+
+    while (frontier.length) {
+      frontier.sort((left, right) => right.time - left.time);
+      const current = frontier.pop();
+      if (!current || current.time !== nodeTimes[current.index]) {
+        continue;
+      }
+
+      adjacency[current.index].forEach(({ neighborIndex, weight }) => {
+        const jitter = 7 + Math.abs(Math.sin(neurons[neighborIndex].seed * 1.37 + current.index * 0.11)) * 12;
+        const nextTime = current.time + weight + jitter;
+        if (nextTime >= nodeTimes[neighborIndex]) {
+          return;
+        }
+
+        nodeTimes[neighborIndex] = nextTime;
+        frontier.push({ index: neighborIndex, time: nextTime });
+      });
+    }
+
+    return nodeTimes.map((time, index) => (
+      Number.isFinite(time)
+        ? time
+        : distance(neurons[index], neurons[sourceIndex]) * 3.6 + 42
+    ));
   };
 
   const rebuild = () => {
@@ -370,20 +462,15 @@ const initializeNeuralField = (canvas) => {
     const sourceIndex = getNearestNeuronIndex(sourceX, sourceY);
     const sourceNode = neurons[sourceIndex];
     const sourcePoint = { x: sourceNode.x, y: sourceNode.y };
-    const nodeTimes = neurons.map((node, index) => {
-      const radialDelay = distance(node, sourcePoint) * 4.35;
-      const jitter = (Math.sin(node.seed * 1.73 + index * 0.37) + 1) * 18;
-      return radialDelay + jitter;
-    });
-    nodeTimes[sourceIndex] = 0;
+    const nodeTimes = buildPropagationTimes(sourceIndex);
 
-    const sparkCount = width < 900 ? 18 : 28;
+    const sparkCount = width < 900 ? 24 : 38;
     const sparks = Array.from({ length: sparkCount }, (_, index) => ({
       angle: (Math.PI * 2 * index) / sparkCount + (Math.random() - 0.5) * 0.34,
-      speed: 130 + Math.random() * 210,
+      speed: 140 + Math.random() * 240,
       drift: (Math.random() - 0.5) * 0.8,
-      radius: 1.5 + Math.random() * 2.2,
-      life: 780 + Math.random() * 520,
+      radius: 1.4 + Math.random() * 2.8,
+      life: 820 + Math.random() * 620,
     }));
 
     const maxTime = nodeTimes.reduce((maximum, value) => Math.max(maximum, value), 0);
@@ -393,7 +480,8 @@ const initializeNeuralField = (canvas) => {
       sourcePoint,
       nodeTimes,
       sparks,
-      duration: maxTime + 1500,
+      segmentLength: 0.16 + Math.random() * 0.1,
+      duration: maxTime + 1700,
     });
 
     bursts = bursts.slice(-4);
@@ -420,8 +508,8 @@ const initializeNeuralField = (canvas) => {
       brainGeometry.cy,
       brainGeometry.width * 0.72
     );
-    underGlow.addColorStop(0, "rgba(85, 221, 255, 0.16)");
-    underGlow.addColorStop(0.45, "rgba(85, 221, 255, 0.08)");
+    underGlow.addColorStop(0, "rgba(85, 221, 255, 0.22)");
+    underGlow.addColorStop(0.45, "rgba(85, 221, 255, 0.12)");
     underGlow.addColorStop(1, "rgba(85, 221, 255, 0)");
     context.fillStyle = underGlow;
     context.beginPath();
@@ -448,16 +536,16 @@ const initializeNeuralField = (canvas) => {
     const frontY = brainGeometry.top + depthY * 10;
 
     context.save();
-    context.globalAlpha = 0.18;
-    context.shadowColor = "rgba(65, 220, 255, 0.4)";
-    context.shadowBlur = 40;
+    context.globalAlpha = 0.24;
+    context.shadowColor = "rgba(65, 220, 255, 0.45)";
+    context.shadowBlur = 56;
     context.drawImage(brainImage, backX, backY, brainGeometry.width, brainGeometry.height);
     context.restore();
 
     context.save();
-    context.globalAlpha = 0.97;
-    context.shadowColor = "rgba(90, 236, 255, 0.3)";
-    context.shadowBlur = 32;
+    context.globalAlpha = 0.99;
+    context.shadowColor = "rgba(90, 236, 255, 0.38)";
+    context.shadowBlur = 46;
     context.drawImage(brainImage, frontX, frontY, brainGeometry.width, brainGeometry.height);
     context.restore();
 
@@ -481,6 +569,56 @@ const initializeNeuralField = (canvas) => {
     context.restore();
   };
 
+  const drawEdgePulse = (edge, burst, elapsed) => {
+    const timeA = burst.nodeTimes[edge.a];
+    const timeB = burst.nodeTimes[edge.b];
+    if (!Number.isFinite(timeA) || !Number.isFinite(timeB) || Math.abs(timeA - timeB) < 1) {
+      return 0;
+    }
+
+    const forward = timeA <= timeB;
+    const fromNode = neurons[forward ? edge.a : edge.b];
+    const toNode = neurons[forward ? edge.b : edge.a];
+    const startAt = Math.min(timeA, timeB);
+    const travelDuration = clamp(edge.length * 1.7, 92, 220);
+    const progress = (elapsed - startAt) / travelDuration;
+
+    if (progress < 0 || progress > 1.24) {
+      return 0;
+    }
+
+    const head = clamp(progress, 0, 1);
+    const tail = clamp(head - burst.segmentLength, 0, 1);
+    const segmentStrength = clamp(1 - Math.abs(progress - 0.5) * 1.6, 0, 1);
+
+    const startX = lerp(fromNode.x, toNode.x, tail);
+    const startY = lerp(fromNode.y, toNode.y, tail);
+    const endX = lerp(fromNode.x, toNode.x, head);
+    const endY = lerp(fromNode.y, toNode.y, head);
+    const gradient = context.createLinearGradient(startX, startY, endX, endY);
+    gradient.addColorStop(0, "rgba(142, 248, 255, 0)");
+    gradient.addColorStop(0.25, `rgba(142, 248, 255, ${0.24 + edge.signal * 0.14})`);
+    gradient.addColorStop(0.75, `rgba(248, 255, 255, ${0.72 + segmentStrength * 0.18})`);
+    gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+
+    context.strokeStyle = gradient;
+    context.lineWidth = 1.2 + edge.signal * 1.6 + segmentStrength * 1.9;
+    context.beginPath();
+    context.moveTo(startX, startY);
+    context.lineTo(endX, endY);
+    context.stroke();
+
+    const nodeFlash = context.createRadialGradient(endX, endY, 0, endX, endY, 16 + edge.signal * 10);
+    nodeFlash.addColorStop(0, `rgba(240, 255, 255, ${0.54 + segmentStrength * 0.24})`);
+    nodeFlash.addColorStop(1, "rgba(138, 246, 255, 0)");
+    context.fillStyle = nodeFlash;
+    context.beginPath();
+    context.arc(endX, endY, 16 + edge.signal * 10, 0, Math.PI * 2);
+    context.fill();
+
+    return segmentStrength;
+  };
+
   const drawNeuralMesh = (time) => {
     const hover = getHoverFocus();
 
@@ -497,19 +635,23 @@ const initializeNeuralField = (canvas) => {
       bursts.forEach((burst) => {
         const elapsed = time - burst.start;
         const edgeTime = (burst.nodeTimes[edge.a] + burst.nodeTimes[edge.b]) * 0.5;
-        burstGain = Math.max(burstGain, Math.exp(-((elapsed - edgeTime) ** 2) / 15000));
+        burstGain = Math.max(burstGain, Math.exp(-((elapsed - edgeTime) ** 2) / 12000));
       });
 
-      context.strokeStyle = `rgba(132, 244, 255, ${0.02 + hoverGain * 0.07 + burstGain * 0.22})`;
-      context.lineWidth = 0.85 + burstGain * 1.15;
+      context.strokeStyle = `rgba(132, 244, 255, ${0.018 + edge.signal * 0.08 + hoverGain * 0.05 + burstGain * 0.16})`;
+      context.lineWidth = 0.7 + edge.signal * 0.95 + burstGain * 0.8;
       context.beginPath();
       context.moveTo(start.x, start.y);
       context.lineTo(end.x, end.y);
       context.stroke();
+
+      bursts.forEach((burst) => {
+        drawEdgePulse(edge, burst, time - burst.start);
+      });
     });
 
     neurons.forEach((node, index) => {
-      const ambient = 0.12 + 0.14 * Math.sin(time * 0.0017 + node.twinkle);
+      const ambient = 0.08 + node.signal * 0.22 + 0.12 * Math.sin(time * 0.0017 + node.twinkle);
       const hoverGain = clamp(1 - distance(node, hover) / 120, 0, 1);
       let burstGain = 0;
 
@@ -518,18 +660,18 @@ const initializeNeuralField = (canvas) => {
         burstGain = Math.max(burstGain, getNodeBurstIntensity(burst, index, elapsed));
       });
 
-      const glowRadius = 8 + hoverGain * 10 + burstGain * 28;
+      const glowRadius = 7 + node.signal * 13 + hoverGain * 9 + burstGain * 28;
       const glow = context.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowRadius);
-      glow.addColorStop(0, `rgba(142, 248, 255, ${0.16 + hoverGain * 0.12 + burstGain * 0.34})`);
+      glow.addColorStop(0, `rgba(142, 248, 255, ${0.1 + node.signal * 0.18 + hoverGain * 0.1 + burstGain * 0.34})`);
       glow.addColorStop(1, "rgba(142, 248, 255, 0)");
       context.fillStyle = glow;
       context.beginPath();
       context.arc(node.x, node.y, glowRadius, 0, Math.PI * 2);
       context.fill();
 
-      context.fillStyle = `rgba(235, 252, 255, ${0.5 + ambient * 0.2 + burstGain * 0.26})`;
+      context.fillStyle = `rgba(235, 252, 255, ${0.34 + ambient * 0.34 + burstGain * 0.26})`;
       context.beginPath();
-      context.arc(node.x, node.y, node.radius + hoverGain * 0.8 + burstGain * 1.4, 0, Math.PI * 2);
+      context.arc(node.x, node.y, node.radius + hoverGain * 0.7 + burstGain * 1.3, 0, Math.PI * 2);
       context.fill();
     });
   };
@@ -541,18 +683,34 @@ const initializeNeuralField = (canvas) => {
         return;
       }
 
-      for (let ringIndex = 0; ringIndex < 3; ringIndex += 1) {
+      const sourceFlash = context.createRadialGradient(
+        burst.sourcePoint.x,
+        burst.sourcePoint.y,
+        0,
+        burst.sourcePoint.x,
+        burst.sourcePoint.y,
+        36 + elapsed * 0.08
+      );
+      sourceFlash.addColorStop(0, `rgba(248, 255, 255, ${Math.exp(-elapsed / 210) * 0.8})`);
+      sourceFlash.addColorStop(0.25, `rgba(122, 241, 255, ${Math.exp(-elapsed / 360) * 0.46})`);
+      sourceFlash.addColorStop(1, "rgba(122, 241, 255, 0)");
+      context.fillStyle = sourceFlash;
+      context.beginPath();
+      context.arc(burst.sourcePoint.x, burst.sourcePoint.y, 36 + elapsed * 0.08, 0, Math.PI * 2);
+      context.fill();
+
+      for (let ringIndex = 0; ringIndex < 4; ringIndex += 1) {
         const ringElapsed = elapsed - ringIndex * 90;
         if (ringElapsed < 0 || ringElapsed > 900) {
           continue;
         }
 
-        const ringRadius = 16 + ringElapsed * 0.24;
-        const ringAlpha = clamp(0.34 - ringElapsed / 1700, 0, 0.34);
+        const ringRadius = 16 + ringElapsed * 0.26;
+        const ringAlpha = clamp(0.38 - ringElapsed / 1700, 0, 0.38);
         context.beginPath();
         context.arc(burst.sourcePoint.x, burst.sourcePoint.y, ringRadius, 0, Math.PI * 2);
         context.strokeStyle = `rgba(132, 244, 255, ${ringAlpha})`;
-        context.lineWidth = 1.2;
+        context.lineWidth = 1.2 + Math.exp(-ringElapsed / 300) * 0.4;
         context.stroke();
       }
 
@@ -638,21 +796,29 @@ const initializeNeuralField = (canvas) => {
   };
 
   const movePointer = (event) => {
+    if (!brainContainsPoint(event.clientX, event.clientY)) {
+      if (pointer.active) {
+        resetPointer();
+      }
+      return;
+    }
+
     pointer.targetX = event.clientX;
     pointer.targetY = event.clientY;
     pointer.active = true;
   };
 
   const triggerBurst = (event) => {
+    if (!brainContainsPoint(event.clientX, event.clientY)) {
+      return;
+    }
+
     pointer.targetX = event.clientX;
     pointer.targetY = event.clientY;
     pointer.active = true;
     pointer.pulseAt = performance.now();
 
-    const target = brainContainsPoint(event.clientX, event.clientY)
-      ? { x: event.clientX, y: event.clientY }
-      : getHoverFocus();
-    createBurst(target.x, target.y);
+    createBurst(event.clientX, event.clientY);
   };
 
   const resetPointer = () => {
@@ -684,6 +850,12 @@ const initializeNeuralField = (canvas) => {
     }
   });
 
+  brainImage.addEventListener("error", () => {
+    if (!brainImage.src.endsWith("brain-hero-3d.svg")) {
+      brainImage.src = "./assets/brain-hero-3d.svg";
+    }
+  });
+
   const loadBrainImage = async () => {
     try {
       const chunkPaths = [
@@ -696,7 +868,7 @@ const initializeNeuralField = (canvas) => {
       ];
       const parts = await Promise.all(
         chunkPaths.map(async (chunkPath) => {
-          const response = await fetch(chunkPath, { cache: "force-cache" });
+          const response = await fetch(chunkPath, { cache: "no-cache" });
           if (!response.ok) {
             throw new Error(`Missing brain image payload chunk: ${chunkPath}`);
           }
