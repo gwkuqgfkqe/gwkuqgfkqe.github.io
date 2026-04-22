@@ -445,7 +445,7 @@ const initializeNeuralField = (canvas) => {
       right: imageLeft + imageWidth,
       bottom: imageTop + imageHeight,
       cx: imageLeft + imageWidth * 0.5,
-      cy: imageLeft + imageWidth * 0.45,
+      cy: imageTop + imageHeight * 0.45,
       sx: imageWidth * 0.5,
       sy: imageHeight * 0.45,
     };
