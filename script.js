@@ -145,7 +145,6 @@ const initializeNeuralField = (canvas) => {
   let frameId = 0;
   let brainGeometry = null;
   let brainImageReady = false;
-  let brainObjectUrl = null;
   let brainMaskData = null;
   let brainMaskWidth = 0;
   let brainMaskHeight = 0;
@@ -686,39 +685,27 @@ const initializeNeuralField = (canvas) => {
   });
 
   const loadBrainImage = async () => {
-    const chunkPaths = [
-      "./assets/brain-hero-3d.b64.00",
-      "./assets/brain-hero-3d.b64.01",
-      "./assets/brain-hero-3d.b64.02",
-      "./assets/brain-hero-3d.b64.03",
-      "./assets/brain-hero-3d.b64.04",
-      "./assets/brain-hero-3d.b64.05",
-    ];
-
     try {
+      const chunkPaths = [
+        "./assets/brain-hero-25d.b64.00",
+        "./assets/brain-hero-25d.b64.01",
+        "./assets/brain-hero-25d.b64.02",
+        "./assets/brain-hero-25d.b64.03",
+        "./assets/brain-hero-25d.b64.04",
+        "./assets/brain-hero-25d.b64.05",
+      ];
       const parts = await Promise.all(
         chunkPaths.map(async (chunkPath) => {
           const response = await fetch(chunkPath, { cache: "force-cache" });
           if (!response.ok) {
-            throw new Error(`Missing brain chunk: ${chunkPath}`);
+            throw new Error(`Missing brain image payload chunk: ${chunkPath}`);
           }
 
           return (await response.text()).trim();
         })
       );
 
-      const binary = atob(parts.join(""));
-      const bytes = new Uint8Array(binary.length);
-      for (let index = 0; index < binary.length; index += 1) {
-        bytes[index] = binary.charCodeAt(index);
-      }
-
-      if (brainObjectUrl) {
-        URL.revokeObjectURL(brainObjectUrl);
-      }
-
-      brainObjectUrl = URL.createObjectURL(new Blob([bytes], { type: "image/png" }));
-      brainImage.src = brainObjectUrl;
+      brainImage.src = `data:image/webp;base64,${parts.join("")}`;
     } catch (error) {
       brainImage.src = "./assets/brain-hero-3d.svg";
     }
