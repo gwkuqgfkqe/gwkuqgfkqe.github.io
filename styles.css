@@ -40,10 +40,11 @@ body {
   min-height: 100vh;
   color: var(--text);
   background:
-    radial-gradient(circle at 16% 10%, rgba(58, 166, 188, 0.16), transparent 24%),
-    radial-gradient(circle at 78% 18%, rgba(58, 166, 188, 0.16), transparent 18%),
-    radial-gradient(circle at 64% 72%, rgba(150, 100, 63, 0.12), transparent 22%),
-    linear-gradient(180deg, #fbfcfb 0%, #eff5f2 36%, #e6eeec 100%);
+    radial-gradient(circle at 20% 10%, rgba(58, 166, 188, 0.22), transparent 26%),
+    radial-gradient(circle at 60% 18%, rgba(111, 239, 255, 0.12), transparent 22%),
+    radial-gradient(circle at 78% 18%, rgba(58, 166, 188, 0.14), transparent 18%),
+    radial-gradient(circle at 64% 72%, rgba(150, 100, 63, 0.08), transparent 22%),
+    linear-gradient(180deg, #f7fbfc 0%, #eaf3f1 34%, #e3ecea 100%);
   font-family: var(--font-body);
   line-height: 1.7;
 }
@@ -103,9 +104,21 @@ a {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 43% 20%, rgba(58, 166, 188, 0.22), transparent 18%),
-    radial-gradient(circle at 42% 20%, rgba(103, 212, 224, 0.14), transparent 30%);
-  opacity: 0.78;
+    radial-gradient(circle at 32% 18%, rgba(58, 166, 188, 0.3), transparent 18%),
+    radial-gradient(circle at 30% 19%, rgba(103, 212, 224, 0.2), transparent 30%),
+    radial-gradient(circle at 45% 52%, rgba(58, 166, 188, 0.08), transparent 34%);
+  opacity: 0.92;
+}
+
+.neural-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 28% 20%, rgba(247, 253, 255, 0.18), transparent 20%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 36%, rgba(16, 61, 68, 0.04) 100%);
+  pointer-events: none;
+  mix-blend-mode: screen;
 }
 
 .neural-canvas {
@@ -113,7 +126,7 @@ a {
   inset: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.98;
+  opacity: 1;
 }
 
 .neural-halo,
@@ -130,13 +143,14 @@ a {
 }
 
 .neural-halo-one {
-  top: 2%;
-  left: 7%;
-  width: 54rem;
-  height: 34rem;
+  top: 0;
+  left: 5%;
+  width: 58rem;
+  height: 36rem;
   background:
-    radial-gradient(circle at 42% 52%, rgba(58, 166, 188, 0.36), transparent 60%),
-    radial-gradient(circle at 68% 46%, rgba(103, 212, 224, 0.24), transparent 56%);
+    radial-gradient(circle at 36% 44%, rgba(58, 166, 188, 0.42), transparent 58%),
+    radial-gradient(circle at 58% 42%, rgba(103, 212, 224, 0.28), transparent 54%);
+  opacity: 0.42;
 }
 
 .neural-halo-two {
