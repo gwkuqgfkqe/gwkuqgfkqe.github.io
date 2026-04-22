@@ -1,0 +1,121 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 1536 1024"
+  fill="none"
+>
+  <defs>
+    <radialGradient id="cortexFill" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(612 286) rotate(18) scale(764 612)">
+      <stop offset="0" stop-color="#e9ffff" stop-opacity=".95" />
+      <stop offset=".28" stop-color="#9df6ff" stop-opacity=".92" />
+      <stop offset=".62" stop-color="#45bfd3" stop-opacity=".88" />
+      <stop offset="1" stop-color="#17465a" stop-opacity=".98" />
+    </radialGradient>
+    <linearGradient id="cortexRim" x1="322" y1="212" x2="1228" y2="784" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f5ffff" stop-opacity=".92" />
+      <stop offset=".4" stop-color="#86ecff" stop-opacity=".42" />
+      <stop offset="1" stop-color="#163d4c" stop-opacity=".18" />
+    </linearGradient>
+    <radialGradient id="innerGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(770 472) rotate(90) scale(318 462)">
+      <stop offset="0" stop-color="#b4ffff" stop-opacity=".44" />
+      <stop offset=".48" stop-color="#5be7ff" stop-opacity=".18" />
+      <stop offset="1" stop-color="#0b2232" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="deepFold" x1="480" y1="258" x2="1098" y2="772" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f2ffff" stop-opacity=".64" />
+      <stop offset=".45" stop-color="#a1f7ff" stop-opacity=".2" />
+      <stop offset="1" stop-color="#04131f" stop-opacity=".28" />
+    </linearGradient>
+    <filter id="outerShadow" x="118" y="38" width="1310" height="986" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="48" stdDeviation="52" flood-color="#0d2d3d" flood-opacity=".34" />
+    </filter>
+    <filter id="softBlur" x="222" y="122" width="1100" height="776" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="22" />
+    </filter>
+    <clipPath id="cortexClip">
+      <path d="M334 468C312 352 362 248 476 184C613 108 829 98 1007 172C1156 234 1258 354 1268 498C1276 612 1218 721 1107 794C1030 844 942 875 840 886C779 923 692 941 596 924C503 907 418 860 360 790C287 744 240 672 234 584C198 538 199 476 248 430C262 403 287 382 334 362V468Z" />
+      <path d="M882 696C939 662 1028 660 1096 704C1156 744 1175 807 1142 860C1108 914 1028 938 961 917C904 898 864 852 861 798C860 756 868 722 882 696Z" />
+      <path d="M760 830C790 871 804 921 792 963C780 1000 752 1020 720 1012C689 1004 670 972 670 932C671 891 691 852 730 822L760 830Z" />
+    </clipPath>
+  </defs>
+
+  <g filter="url(#outerShadow)">
+    <path
+      d="M334 468C312 352 362 248 476 184C613 108 829 98 1007 172C1156 234 1258 354 1268 498C1276 612 1218 721 1107 794C1030 844 942 875 840 886C779 923 692 941 596 924C503 907 418 860 360 790C287 744 240 672 234 584C198 538 199 476 248 430C262 403 287 382 334 362V468Z"
+      fill="url(#cortexFill)"
+    />
+    <path
+      d="M882 696C939 662 1028 660 1096 704C1156 744 1175 807 1142 860C1108 914 1028 938 961 917C904 898 864 852 861 798C860 756 868 722 882 696Z"
+      fill="url(#cortexFill)"
+    />
+    <path
+      d="M760 830C790 871 804 921 792 963C780 1000 752 1020 720 1012C689 1004 670 972 670 932C671 891 691 852 730 822L760 830Z"
+      fill="#1d5267"
+    />
+
+    <g clip-path="url(#cortexClip)">
+      <rect x="178" y="88" width="1180" height="860" fill="url(#innerGlow)" />
+      <ellipse cx="862" cy="462" rx="372" ry="258" fill="#082334" fill-opacity=".26" />
+      <ellipse cx="632" cy="278" rx="208" ry="138" fill="#ffffff" fill-opacity=".16" filter="url(#softBlur)" />
+      <ellipse cx="1048" cy="534" rx="210" ry="168" fill="#14354a" fill-opacity=".42" />
+      <path d="M422 332C514 246 665 216 842 242C997 264 1113 332 1168 430" stroke="url(#deepFold)" stroke-width="24" stroke-linecap="round" opacity=".58" />
+      <path d="M366 404C482 314 661 280 861 312C1018 338 1129 406 1176 494" stroke="url(#deepFold)" stroke-width="22" stroke-linecap="round" opacity=".52" />
+      <path d="M334 486C462 392 645 360 862 390C1037 414 1147 472 1188 556" stroke="url(#deepFold)" stroke-width="22" stroke-linecap="round" opacity=".48" />
+      <path d="M344 572C466 486 647 454 860 482C1032 504 1144 558 1182 634" stroke="url(#deepFold)" stroke-width="21" stroke-linecap="round" opacity=".46" />
+      <path d="M370 648C486 586 649 564 838 587C986 606 1086 650 1140 712" stroke="url(#deepFold)" stroke-width="18" stroke-linecap="round" opacity=".4" />
+      <path d="M456 246C518 316 538 384 520 450C496 540 424 612 318 656" stroke="#d9ffff" stroke-opacity=".16" stroke-width="14" stroke-linecap="round" />
+      <path d="M590 222C650 298 666 380 638 468C604 572 520 648 410 688" stroke="#d9ffff" stroke-opacity=".14" stroke-width="12" stroke-linecap="round" />
+      <path d="M760 222C808 292 822 366 798 450C766 556 694 640 598 692" stroke="#d9ffff" stroke-opacity=".14" stroke-width="12" stroke-linecap="round" />
+      <path d="M926 254C960 314 966 388 944 468C912 574 844 652 754 706" stroke="#d9ffff" stroke-opacity=".14" stroke-width="12" stroke-linecap="round" />
+      <path d="M1062 324C1072 384 1062 446 1028 514C986 596 914 662 832 716" stroke="#d9ffff" stroke-opacity=".12" stroke-width="11" stroke-linecap="round" />
+
+      <g opacity=".9">
+        <circle cx="506" cy="356" r="10" fill="#f5ffff" />
+        <circle cx="638" cy="414" r="12" fill="#d4ffff" />
+        <circle cx="784" cy="342" r="12" fill="#c3fbff" />
+        <circle cx="918" cy="454" r="14" fill="#dcffff" />
+        <circle cx="1038" cy="382" r="10" fill="#f1ffff" />
+        <circle cx="570" cy="584" r="12" fill="#d0fbff" />
+        <circle cx="740" cy="610" r="14" fill="#e7ffff" />
+        <circle cx="930" cy="624" r="12" fill="#ccfbff" />
+        <circle cx="1012" cy="760" r="10" fill="#dffeff" />
+        <circle cx="726" cy="920" r="10" fill="#bff8ff" />
+      </g>
+
+      <g stroke="#9df7ff" stroke-opacity=".26" stroke-width="5" stroke-linecap="round">
+        <path d="M506 356L638 414L784 342L918 454L1038 382" />
+        <path d="M638 414L570 584L740 610L930 624L1012 760" />
+        <path d="M740 610L726 920" />
+        <path d="M784 342L740 610" />
+        <path d="M918 454L930 624" />
+      </g>
+    </g>
+
+    <path
+      d="M334 468C312 352 362 248 476 184C613 108 829 98 1007 172C1156 234 1258 354 1268 498C1276 612 1218 721 1107 794C1030 844 942 875 840 886C779 923 692 941 596 924C503 907 418 860 360 790C287 744 240 672 234 584C198 538 199 476 248 430C262 403 287 382 334 362"
+      stroke="url(#cortexRim)"
+      stroke-width="14"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      opacity=".82"
+    />
+    <path
+      d="M882 696C939 662 1028 660 1096 704C1156 744 1175 807 1142 860C1108 914 1028 938 961 917C904 898 864 852 861 798C860 756 868 722 882 696Z"
+      stroke="url(#cortexRim)"
+      stroke-width="11"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      opacity=".72"
+    />
+    <path
+      d="M760 830C790 871 804 921 792 963C780 1000 752 1020 720 1012C689 1004 670 972 670 932C671 891 691 852 730 822"
+      stroke="#b1fbff"
+      stroke-opacity=".54"
+      stroke-width="9"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <path d="M470 228C606 126 824 116 1000 198" stroke="#ffffff" stroke-opacity=".26" stroke-width="18" stroke-linecap="round" filter="url(#softBlur)" />
+    <path d="M934 684C1004 666 1072 690 1112 738" stroke="#ffffff" stroke-opacity=".18" stroke-width="14" stroke-linecap="round" filter="url(#softBlur)" />
+  </g>
+</svg>
