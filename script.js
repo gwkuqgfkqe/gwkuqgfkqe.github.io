@@ -148,6 +148,7 @@ const initializeNeuralField = (canvas) => {
   let brainMaskData = null;
   let brainMaskWidth = 0;
   let brainMaskHeight = 0;
+  let brainObjectUrl = "";
   let neurons = [];
   let edges = [];
   let adjacency = [];
@@ -856,6 +857,22 @@ const initializeNeuralField = (canvas) => {
     }
   });
 
+  const base64ToObjectUrl = (base64, mimeType) => {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+
+    if (brainObjectUrl) {
+      URL.revokeObjectURL(brainObjectUrl);
+    }
+
+    brainObjectUrl = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
+    return brainObjectUrl;
+  };
+
   const loadBrainImage = async () => {
     try {
       const chunkPaths = [
@@ -877,7 +894,7 @@ const initializeNeuralField = (canvas) => {
         })
       );
 
-      brainImage.src = `data:image/webp;base64,${parts.join("")}`;
+      brainImage.src = base64ToObjectUrl(parts.join(""), "image/webp");
     } catch (error) {
       brainImage.src = "./assets/brain-hero-3d.svg";
     }
