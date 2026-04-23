@@ -148,7 +148,6 @@ const initializeNeuralField = (canvas) => {
   let brainMaskData = null;
   let brainMaskWidth = 0;
   let brainMaskHeight = 0;
-  let brainObjectUrl = "";
   let neurons = [];
   let edges = [];
   let adjacency = [];
@@ -852,40 +851,25 @@ const initializeNeuralField = (canvas) => {
   });
 
   brainImage.addEventListener("error", () => {
-    if (!brainImage.src.endsWith("brain-hero-3d.svg")) {
+    if (!brainImage.src.includes("brain-hero-3d.svg")) {
       brainImage.src = "./assets/brain-hero-3d.svg";
     }
   });
 
-  const base64ToObjectUrl = (base64, mimeType) => {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-
-    for (let index = 0; index < binary.length; index += 1) {
-      bytes[index] = binary.charCodeAt(index);
-    }
-
-    if (brainObjectUrl) {
-      URL.revokeObjectURL(brainObjectUrl);
-    }
-
-    brainObjectUrl = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
-    return brainObjectUrl;
-  };
-
   const loadBrainImage = async () => {
     try {
+      const version = "20260422-brain-25d-final-live";
       const chunkPaths = [
-        "./assets/brain-hero-25d.b64.00",
-        "./assets/brain-hero-25d.b64.01",
-        "./assets/brain-hero-25d.b64.02",
-        "./assets/brain-hero-25d.b64.03",
-        "./assets/brain-hero-25d.b64.04",
-        "./assets/brain-hero-25d.b64.05",
+        "./assets/brain-hero-25d-live.b64.00",
+        "./assets/brain-hero-25d-live.b64.01",
+        "./assets/brain-hero-25d-live.b64.02",
+        "./assets/brain-hero-25d-live.b64.03",
+        "./assets/brain-hero-25d-live.b64.04",
+        "./assets/brain-hero-25d-live.b64.05",
       ];
       const parts = await Promise.all(
         chunkPaths.map(async (chunkPath) => {
-          const response = await fetch(chunkPath, { cache: "no-cache" });
+          const response = await fetch(`${chunkPath}?v=${version}`, { cache: "no-cache" });
           if (!response.ok) {
             throw new Error(`Missing brain image payload chunk: ${chunkPath}`);
           }
@@ -894,7 +878,7 @@ const initializeNeuralField = (canvas) => {
         })
       );
 
-      brainImage.src = base64ToObjectUrl(parts.join(""), "image/webp");
+      brainImage.src = `data:image/webp;base64,${parts.join("")}`;
     } catch (error) {
       brainImage.src = "./assets/brain-hero-3d.svg";
     }
