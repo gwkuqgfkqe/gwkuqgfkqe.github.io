@@ -850,42 +850,13 @@ const initializeNeuralField = (canvas) => {
     }
   });
 
+  const version = "20260422-brain-embedded-svg";
+
   brainImage.addEventListener("error", () => {
-    if (!brainImage.src.includes("brain-hero-3d.svg")) {
-      brainImage.src = "./assets/brain-hero-3d.svg";
-    }
+    console.error("Failed to load hero brain image.");
   });
 
-  const loadBrainImage = async () => {
-    try {
-      const version = "20260422-brain-25d-publish-mini";
-      const chunkPaths = [
-        "./assets/brain-hero-25d-publish-mini.00",
-        "./assets/brain-hero-25d-publish-mini.01",
-        "./assets/brain-hero-25d-publish-mini.02",
-        "./assets/brain-hero-25d-publish-mini.03",
-        "./assets/brain-hero-25d-publish-mini.04",
-        "./assets/brain-hero-25d-publish-mini.05",
-        "./assets/brain-hero-25d-publish-mini.06",
-      ];
-      const parts = await Promise.all(
-        chunkPaths.map(async (chunkPath) => {
-          const response = await fetch(`${chunkPath}?v=${version}`, { cache: "no-cache" });
-          if (!response.ok) {
-            throw new Error(`Missing brain image payload chunk: ${chunkPath}`);
-          }
-
-          return (await response.text()).trim();
-        })
-      );
-
-      brainImage.src = `data:image/webp;base64,${parts.join("")}`;
-    } catch (error) {
-      brainImage.src = "./assets/brain-hero-3d.svg";
-    }
-  };
-
-  loadBrainImage();
+  brainImage.src = `./assets/brain-hero-3d.svg?v=${version}`;
 };
 
 if (neuralCanvas) {
