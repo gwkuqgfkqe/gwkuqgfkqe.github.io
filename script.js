@@ -858,14 +858,15 @@ const initializeNeuralField = (canvas) => {
 
   const loadBrainImage = async () => {
     try {
-      const version = "20260422-brain-25d-final-live";
+      const version = "20260422-brain-25d-publish-mini";
       const chunkPaths = [
-        "./assets/brain-hero-25d-live.b64.00",
-        "./assets/brain-hero-25d-live.b64.01",
-        "./assets/brain-hero-25d-live.b64.02",
-        "./assets/brain-hero-25d-live.b64.03",
-        "./assets/brain-hero-25d-live.b64.04",
-        "./assets/brain-hero-25d-live.b64.05",
+        "./assets/brain-hero-25d-publish-mini.00",
+        "./assets/brain-hero-25d-publish-mini.01",
+        "./assets/brain-hero-25d-publish-mini.02",
+        "./assets/brain-hero-25d-publish-mini.03",
+        "./assets/brain-hero-25d-publish-mini.04",
+        "./assets/brain-hero-25d-publish-mini.05",
+        "./assets/brain-hero-25d-publish-mini.06",
       ];
       const parts = await Promise.all(
         chunkPaths.map(async (chunkPath) => {
