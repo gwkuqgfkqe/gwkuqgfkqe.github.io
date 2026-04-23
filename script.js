@@ -850,13 +850,13 @@ const initializeNeuralField = (canvas) => {
     }
   });
 
-  const version = "20260422-brain-embedded-svg";
+  const version = "20260422-brain-25d-png-live";
 
   brainImage.addEventListener("error", () => {
     console.error("Failed to load hero brain image.");
   });
 
-  brainImage.src = `./assets/brain-hero-3d.svg?v=${version}`;
+  brainImage.src = `./assets/brain-hero-25d.png?v=${version}`;
 };
 
 if (neuralCanvas) {
