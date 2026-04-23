@@ -123,6 +123,7 @@ a {
 }
 
 .brain-stage-image {
+  display: none;
   position: absolute;
   left: var(--brain-frame-left, 2rem);
   top: var(--brain-frame-top, 5.5rem);
