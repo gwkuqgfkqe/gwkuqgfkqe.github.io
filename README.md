@@ -1,6 +1,6 @@
 # Zonghan Du Academic Homepage
 
-Static academic homepage for PhD applications, built as a plain HTML/CSS/JS
+Static academic homepage for PhD appli websitecations, built as a plain HTML/CSS/JS
 site for direct deployment on GitHub Pages.
 
 This version is aligned to the latest CV content. Website sections include
