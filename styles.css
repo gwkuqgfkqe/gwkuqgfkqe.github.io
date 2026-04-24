@@ -484,7 +484,7 @@ a {
 .hero-copy::before {
   content: "";
   position: absolute;
-  inset: -2.5rem 1.5rem -3rem -2.2rem;
+  inset: -2.5rem -0.2rem -3rem -2.2rem;
   z-index: -1;
   border-radius: 48px;
   background:
@@ -605,7 +605,7 @@ a {
 .profile-links,
 .metrics-grid,
 .focus-grid,
-interest-grid,
+.interest-grid,
 .plan-grid,
 .education-grid,
 .project-grid,
