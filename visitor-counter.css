@@ -1,0 +1,57 @@
+.visitor-counter {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 35;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(16, 61, 68, 0.12);
+  border-radius: 999px;
+  background: rgba(251, 248, 242, 0.78);
+  box-shadow: 0 16px 44px rgba(28, 38, 47, 0.12);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease,
+    border-color 220ms ease;
+}
+
+.visitor-counter.is-ready {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.visitor-counter.is-owner {
+  border-color: rgba(16, 61, 68, 0.18);
+}
+
+.visitor-counter__label {
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.visitor-counter img {
+  display: block;
+  height: 20px;
+  width: auto;
+}
+
+@media (max-width: 620px) {
+  .visitor-counter {
+    right: 0.75rem;
+    bottom: 0.75rem;
+    padding: 0.48rem 0.58rem;
+  }
+
+  .visitor-counter__label {
+    display: none;
+  }
+}
