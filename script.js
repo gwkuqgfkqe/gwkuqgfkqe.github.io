@@ -436,14 +436,14 @@ const initializeNeuralField = (canvas) => {
 
     if (desktop) {
       const anchorX = width * 0.5;
-      const anchorY = clamp(height * 0.39, 292, 372);
+      const anchorY = clamp(height * 0.39, 316, 396);
       imageWidth = clamp(Math.min(contentWidth * 0.72, width * 0.58), 700, 860);
       imageHeight = imageWidth * visibleRatio;
       imageLeft = clamp(20, anchorX - imageWidth * 0.5, width - imageWidth - 20);
       imageTop = clamp(72, anchorY - imageHeight * 0.45, height - imageHeight - 28);
     } else {
       const anchorX = width * 0.5;
-      const anchorY = clamp(height * 0.31, 212, 286);
+      const anchorY = clamp(height * 0.31, 230, 304);
       imageWidth = clamp(Math.min(width * 0.86, contentWidth * 0.9), 320, 540);
       imageHeight = imageWidth * visibleRatio;
       imageLeft = clamp(12, anchorX - imageWidth * 0.5, width - imageWidth - 12);
@@ -1141,7 +1141,7 @@ const initializeNeuralField = (canvas) => {
     }
   });
 
-  const version = "20260423-brain-hero-polish-9";
+  const version = "20260424-brain-hero-lower-1";
   const brainAssetPath = `./assets/brain-hero-25d.png?v=${version}`;
 
   brainImage.addEventListener("error", () => {
