@@ -435,11 +435,11 @@ const initializeNeuralField = (canvas) => {
     let imageTop;
 
     if (desktop) {
-      const anchorX = contentLeft + contentWidth * 0.45;
+      const anchorX = contentLeft + contentWidth * 0.48;
       const anchorY = clamp(height * 0.355, 252, 336);
-      imageWidth = clamp(Math.min(contentWidth * 0.54, width * 0.43), 560, 760);
+      imageWidth = clamp(Math.min(contentWidth * 0.52, width * 0.41), 540, 720);
       imageHeight = imageWidth * visibleRatio;
-      imageLeft = clamp(contentLeft + 62, anchorX - imageWidth * 0.44, width - imageWidth - 18);
+      imageLeft = clamp(contentLeft + 86, anchorX - imageWidth * 0.41, width - imageWidth - 18);
       imageTop = clamp(88, anchorY - imageHeight * 0.44, height - imageHeight - 24);
     } else {
       const anchorX = contentLeft + contentWidth * 0.52;
@@ -684,7 +684,7 @@ const initializeNeuralField = (canvas) => {
     const frontY = brainGeometry.top + driftY * 7;
 
     context.save();
-    context.globalAlpha = 0.24;
+    context.globalAlpha = 0.18;
     context.shadowColor = "rgba(86, 233, 255, 0.42)";
     context.shadowBlur = 52;
     context.drawImage(
@@ -701,7 +701,7 @@ const initializeNeuralField = (canvas) => {
     context.restore();
 
     context.save();
-    context.globalAlpha = 0.9;
+    context.globalAlpha = 0.8;
     context.shadowColor = "rgba(96, 239, 255, 0.32)";
     context.shadowBlur = 34;
     context.drawImage(
@@ -743,21 +743,21 @@ const initializeNeuralField = (canvas) => {
     }
 
     const veilRight = stageLayout.desktop
-      ? Math.min(width, stageLayout.contentLeft + stageLayout.contentWidth * 0.64)
+      ? Math.min(width, stageLayout.contentLeft + stageLayout.contentWidth * 0.7)
       : width;
     const veilHeight = Math.min(height, stageLayout.desktop ? 720 : 760);
     const leftVeil = context.createLinearGradient(0, 0, veilRight, 0);
-    leftVeil.addColorStop(0, "rgba(247, 250, 249, 0.992)");
-    leftVeil.addColorStop(0.28, "rgba(247, 250, 249, 0.95)");
-    leftVeil.addColorStop(0.6, "rgba(247, 250, 249, 0.76)");
-    leftVeil.addColorStop(0.9, "rgba(247, 250, 249, 0.16)");
+    leftVeil.addColorStop(0, "rgba(247, 250, 249, 0.996)");
+    leftVeil.addColorStop(0.32, "rgba(247, 250, 249, 0.972)");
+    leftVeil.addColorStop(0.66, "rgba(247, 250, 249, 0.84)");
+    leftVeil.addColorStop(0.92, "rgba(247, 250, 249, 0.28)");
     leftVeil.addColorStop(1, "rgba(247, 250, 249, 0)");
     context.fillStyle = leftVeil;
     context.fillRect(0, 0, veilRight, veilHeight);
 
-    const focusX = stageLayout.contentLeft + stageLayout.contentWidth * (stageLayout.desktop ? 0.22 : 0.34);
+    const focusX = stageLayout.contentLeft + stageLayout.contentWidth * (stageLayout.desktop ? 0.24 : 0.34);
     const focusY = stageLayout.desktop ? 310 : 280;
-    const focusRadius = stageLayout.desktop ? 380 : 250;
+    const focusRadius = stageLayout.desktop ? 430 : 265;
     const copyHalo = context.createRadialGradient(
       focusX,
       focusY,
@@ -766,9 +766,9 @@ const initializeNeuralField = (canvas) => {
       focusY,
       focusRadius
     );
-    copyHalo.addColorStop(0, "rgba(250, 248, 243, 0.96)");
-    copyHalo.addColorStop(0.34, "rgba(250, 248, 243, 0.84)");
-    copyHalo.addColorStop(0.72, "rgba(250, 248, 243, 0.22)");
+    copyHalo.addColorStop(0, "rgba(250, 248, 243, 0.985)");
+    copyHalo.addColorStop(0.38, "rgba(250, 248, 243, 0.9)");
+    copyHalo.addColorStop(0.76, "rgba(250, 248, 243, 0.34)");
     copyHalo.addColorStop(1, "rgba(250, 248, 243, 0)");
     context.fillStyle = copyHalo;
     context.beginPath();
@@ -1141,7 +1141,7 @@ const initializeNeuralField = (canvas) => {
     }
   });
 
-  const version = "20260423-brain-hero-polish-2";
+  const version = "20260423-brain-hero-polish-3";
   const brainAssetPath = `./assets/brain-hero-25d.png?v=${version}`;
 
   brainImage.addEventListener("error", () => {
