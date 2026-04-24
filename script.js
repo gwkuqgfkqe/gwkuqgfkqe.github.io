@@ -435,18 +435,19 @@ const initializeNeuralField = (canvas) => {
     let imageTop;
 
     if (desktop) {
-      const anchorY = clamp(height * 0.372, 260, 342);
-      imageWidth = clamp(Math.min(contentWidth * 0.54, width * 0.42), 560, 700);
+      const anchorX = width * 0.5;
+      const anchorY = clamp(height * 0.39, 292, 372);
+      imageWidth = clamp(Math.min(contentWidth * 0.72, width * 0.58), 700, 860);
       imageHeight = imageWidth * visibleRatio;
-      imageLeft = clamp(contentLeft - 24, contentLeft + contentWidth * 0.1, width - imageWidth - 180);
-      imageTop = clamp(92, anchorY - imageHeight * 0.43, height - imageHeight - 36);
+      imageLeft = clamp(20, anchorX - imageWidth * 0.5, width - imageWidth - 20);
+      imageTop = clamp(72, anchorY - imageHeight * 0.45, height - imageHeight - 28);
     } else {
-      const anchorX = contentLeft + contentWidth * 0.56;
-      const anchorY = clamp(height * 0.315, 216, 296);
-      imageWidth = clamp(Math.min(width * 0.78, contentWidth * 0.84), 300, 490);
+      const anchorX = width * 0.5;
+      const anchorY = clamp(height * 0.31, 212, 286);
+      imageWidth = clamp(Math.min(width * 0.86, contentWidth * 0.9), 320, 540);
       imageHeight = imageWidth * visibleRatio;
-      imageLeft = clamp(14, anchorX - imageWidth * 0.48, width - imageWidth - 12);
-      imageTop = clamp(80, anchorY - imageHeight * 0.4, height - imageHeight - 24);
+      imageLeft = clamp(12, anchorX - imageWidth * 0.5, width - imageWidth - 12);
+      imageTop = clamp(72, anchorY - imageHeight * 0.42, height - imageHeight - 20);
     }
 
     brainGeometry = {
@@ -1140,7 +1141,7 @@ const initializeNeuralField = (canvas) => {
     }
   });
 
-  const version = "20260423-brain-hero-polish-8";
+  const version = "20260423-brain-hero-polish-9";
   const brainAssetPath = `./assets/brain-hero-25d.png?v=${version}`;
 
   brainImage.addEventListener("error", () => {
