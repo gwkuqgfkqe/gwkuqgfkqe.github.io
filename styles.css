@@ -112,11 +112,12 @@ a {
   background:
     linear-gradient(
       90deg,
-      rgba(247, 250, 249, 0.98) 0%,
-      rgba(247, 250, 249, 0.92) 11%,
-      rgba(247, 250, 249, 0.52) 28%,
-      rgba(247, 250, 249, 0.14) 44%,
-      rgba(247, 250, 249, 0) 58%
+      rgba(247, 250, 249, 1) 0%,
+      rgba(247, 250, 249, 0.992) 12%,
+      rgba(247, 250, 249, 0.95) 26%,
+      rgba(247, 250, 249, 0.72) 41%,
+      rgba(247, 250, 249, 0.26) 56%,
+      rgba(247, 250, 249, 0.02) 68%
     ),
     radial-gradient(circle at 54% 22%, rgba(248, 253, 255, 0.18), transparent 18%);
   pointer-events: none;
@@ -478,20 +479,33 @@ a {
   position: relative;
   z-index: 1;
   isolation: isolate;
-  padding: 2rem 0;
+  max-width: 45rem;
+  padding: 2rem 0.5rem 2.15rem 0.1rem;
 }
 
 .hero-copy::before {
   content: "";
   position: absolute;
-  inset: -2.7rem -1.4rem -3.1rem -2.4rem;
+  inset: -1.45rem -1.15rem -1.75rem -1.6rem;
   z-index: -1;
-  border-radius: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 42px;
   background:
-    radial-gradient(circle at 22% 20%, rgba(250, 248, 243, 0.998), rgba(250, 248, 243, 0.986) 42%, rgba(250, 248, 243, 0.92) 68%, rgba(250, 248, 243, 0.56) 86%, rgba(250, 248, 243, 0.08) 100%),
-    linear-gradient(90deg, rgba(250, 248, 243, 0.988) 0%, rgba(250, 248, 243, 0.95) 52%, rgba(250, 248, 243, 0.76) 76%, rgba(250, 248, 243, 0.18) 100%);
-  backdrop-filter: blur(12px);
-  filter: blur(24px);
+    linear-gradient(
+      135deg,
+      rgba(250, 248, 243, 0.92) 0%,
+      rgba(250, 248, 243, 0.88) 34%,
+      rgba(250, 248, 243, 0.8) 58%,
+      rgba(250, 248, 243, 0.62) 82%,
+      rgba(250, 248, 243, 0.08) 100%
+    ),
+    radial-gradient(circle at 20% 24%, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.12) 58%, rgba(255, 255, 255, 0) 100%);
+  box-shadow:
+    0 24px 56px rgba(20, 35, 42, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.26);
+  backdrop-filter: blur(20px) saturate(1.04);
+  -webkit-backdrop-filter: blur(20px) saturate(1.04);
+  filter: none;
   opacity: 1;
   pointer-events: none;
 }
@@ -1176,9 +1190,8 @@ a {
   }
 
   .hero-copy::before {
-    inset: -1.4rem -0.75rem -1.6rem -0.75rem;
-    filter: blur(14px);
-    opacity: 0.92;
+    inset: -1rem -0.65rem -1.35rem -0.65rem;
+    opacity: 0.94;
   }
 
   .hero h1 {
@@ -1224,8 +1237,8 @@ a {
   }
 
   .hero-copy::before {
-    inset: -1rem -0.3rem -1.2rem -0.3rem;
-    opacity: 0.9;
+    inset: -0.8rem -0.2rem -1rem -0.2rem;
+    opacity: 0.92;
   }
 
   .hero-actions {
