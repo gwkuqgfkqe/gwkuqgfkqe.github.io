@@ -653,11 +653,59 @@ const initializeNeuralField = (canvas) => {
   };
 
   const drawBrainAsset = (time) => {
-    if (!brainImageReady || !brainGeometry) {
+    if (!brainImageReady || !brainGeometry || !brainImage.naturalWidth || !brainImage.naturalHeight) {
       return;
     }
 
     const hover = getHoverFocus();
+    const sourceX = brainImage.naturalWidth * brainCrop.left;
+    const sourceY = brainImage.naturalHeight * brainCrop.top;
+    const sourceWidth = brainImage.naturalWidth * brainCrop.visibleWidth;
+    const sourceHeight = brainImage.naturalHeight * brainCrop.visibleHeight;
+    const driftX = pointer.active
+      ? clamp((pointer.x - brainGeometry.cx) / brainGeometry.width, -0.55, 0.55)
+      : Math.sin(time * 0.00045) * 0.08;
+    const driftY = pointer.active
+      ? clamp((pointer.y - brainGeometry.cy) / brainGeometry.height, -0.55, 0.55)
+      : Math.cos(time * 0.00038) * 0.05;
+    const backX = brainGeometry.left - driftX * 22;
+    const backY = brainGeometry.top - driftY * 18;
+    const frontX = brainGeometry.left + driftX * 9;
+    const frontY = brainGeometry.top + driftY * 7;
+
+    context.save();
+    context.globalAlpha = 0.24;
+    context.shadowColor = "rgba(86, 233, 255, 0.42)";
+    context.shadowBlur = 52;
+    context.drawImage(
+      brainImage,
+      sourceX,
+      sourceY,
+      sourceWidth,
+      sourceHeight,
+      backX,
+      backY,
+      brainGeometry.width,
+      brainGeometry.height
+    );
+    context.restore();
+
+    context.save();
+    context.globalAlpha = 0.9;
+    context.shadowColor = "rgba(96, 239, 255, 0.32)";
+    context.shadowBlur = 34;
+    context.drawImage(
+      brainImage,
+      sourceX,
+      sourceY,
+      sourceWidth,
+      sourceHeight,
+      frontX,
+      frontY,
+      brainGeometry.width,
+      brainGeometry.height
+    );
+    context.restore();
 
     const hoverGlow = context.createRadialGradient(
       hover.x,
