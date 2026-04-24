@@ -10,13 +10,28 @@ const initializeVisitorCounter = () => {
   const params = new URLSearchParams(window.location.search);
   const markOwner = params.get("owner") === "1";
   const clearOwner = params.get("countme") === "1";
+  const readOwnerMode = () => {
+    try {
+      return window.localStorage.getItem(ownerStorageKey) === "true";
+    } catch {
+      return false;
+    }
+  };
 
   if (markOwner) {
-    window.localStorage.setItem(ownerStorageKey, "true");
+    try {
+      window.localStorage.setItem(ownerStorageKey, "true");
+    } catch {
+      // Private browsing modes can disable storage; fall back to normal counting.
+    }
   }
 
   if (clearOwner) {
-    window.localStorage.removeItem(ownerStorageKey);
+    try {
+      window.localStorage.removeItem(ownerStorageKey);
+    } catch {
+      // Storage is optional; failing to clear should not break the page.
+    }
   }
 
   if (markOwner || clearOwner) {
@@ -27,7 +42,7 @@ const initializeVisitorCounter = () => {
     window.history.replaceState({}, "", cleanUrl);
   }
 
-  const ownerMode = window.localStorage.getItem(ownerStorageKey) === "true";
+  const ownerMode = readOwnerMode();
   const badgeParams = new URLSearchParams({
     page_id: "gwkuqgfkqe.github.io",
     left_text: "Visitors",
