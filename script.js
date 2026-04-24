@@ -653,9 +653,9 @@ const initializeNeuralField = (canvas) => {
     context.fill();
 
     const textVeil = context.createLinearGradient(0, 0, width * 0.6, 0);
-    textVeil.addColorStop(0, "rgba(247, 250, 249, 0.78)");
-    textVeil.addColorStop(0.38, "rgba(247, 250, 249, 0.48)");
-    textVeil.addColorStop(0.82, "rgba(247, 250, 249, 0.08)");
+    textVeil.addColorStop(0, "rgba(247, 250, 249, 0.22)");
+    textVeil.addColorStop(0.38, "rgba(247, 250, 249, 0.12)");
+    textVeil.addColorStop(0.82, "rgba(247, 250, 249, 0.02)");
     textVeil.addColorStop(1, "rgba(247, 250, 249, 0)");
     context.fillStyle = textVeil;
     context.fillRect(0, 0, width * (width < 960 ? 0.92 : 0.52), Math.min(height, 720));
@@ -746,10 +746,10 @@ const initializeNeuralField = (canvas) => {
       : width;
     const veilHeight = Math.min(height, stageLayout.desktop ? 720 : 760);
     const leftVeil = context.createLinearGradient(0, 0, veilRight, 0);
-    leftVeil.addColorStop(0, "rgba(247, 250, 249, 0.88)");
-    leftVeil.addColorStop(0.28, "rgba(247, 250, 249, 0.78)");
-    leftVeil.addColorStop(0.56, "rgba(247, 250, 249, 0.52)");
-    leftVeil.addColorStop(0.82, "rgba(247, 250, 249, 0.14)");
+    leftVeil.addColorStop(0, "rgba(247, 250, 249, 0.2)");
+    leftVeil.addColorStop(0.28, "rgba(247, 250, 249, 0.12)");
+    leftVeil.addColorStop(0.56, "rgba(247, 250, 249, 0.06)");
+    leftVeil.addColorStop(0.82, "rgba(247, 250, 249, 0.02)");
     leftVeil.addColorStop(1, "rgba(247, 250, 249, 0)");
     context.fillStyle = leftVeil;
     context.fillRect(0, 0, veilRight, veilHeight);
@@ -765,9 +765,9 @@ const initializeNeuralField = (canvas) => {
       focusY,
       focusRadius
     );
-    copyHalo.addColorStop(0, "rgba(250, 248, 243, 0.56)");
-    copyHalo.addColorStop(0.42, "rgba(250, 248, 243, 0.24)");
-    copyHalo.addColorStop(0.78, "rgba(250, 248, 243, 0.06)");
+    copyHalo.addColorStop(0, "rgba(250, 248, 243, 0.18)");
+    copyHalo.addColorStop(0.42, "rgba(250, 248, 243, 0.08)");
+    copyHalo.addColorStop(0.78, "rgba(250, 248, 243, 0.02)");
     copyHalo.addColorStop(1, "rgba(250, 248, 243, 0)");
     context.fillStyle = copyHalo;
     context.beginPath();
@@ -1140,7 +1140,7 @@ const initializeNeuralField = (canvas) => {
     }
   });
 
-  const version = "20260423-brain-hero-polish-7";
+  const version = "20260423-brain-hero-polish-8";
   const brainAssetPath = `./assets/brain-hero-25d.png?v=${version}`;
 
   brainImage.addEventListener("error", () => {
