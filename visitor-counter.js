@@ -1,12 +1,14 @@
 const initializeVisitorCounter = () => {
   const counter = document.getElementById("visitor-counter");
-  const badge = document.getElementById("visitor-badge");
+  const value = document.getElementById("visitor-count-value");
 
-  if (!counter || !badge) {
+  if (!counter || !value) {
     return;
   }
 
   const ownerStorageKey = "zonghan-du-owner-visit";
+  const namespace = "gwkuqgfkqe-github-io";
+  const key = "visits";
   const params = new URLSearchParams(window.location.search);
   const markOwner = params.get("owner") === "1";
   const clearOwner = params.get("countme") === "1";
@@ -43,29 +45,31 @@ const initializeVisitorCounter = () => {
   }
 
   const ownerMode = readOwnerMode();
-  const badgeParams = new URLSearchParams({
-    page_id: "gwkuqgfkqe.github.io",
-    left_text: "Visitors",
-    left_color: "#0f4f59",
-    right_color: "#5fe8f4",
-    unique: "true",
-    timeframe: "86400",
-  });
+  const endpoint = ownerMode
+    ? `https://api.counterapi.dev/v1/${namespace}/${key}/`
+    : `https://api.counterapi.dev/v1/${namespace}/${key}/up`;
 
   if (ownerMode) {
-    badgeParams.set("read", "true");
     counter.classList.add("is-owner");
   }
 
-  badge.addEventListener("load", () => {
-    counter.classList.add("is-ready");
-  });
-
-  badge.addEventListener("error", () => {
-    counter.remove();
-  });
-
-  badge.src = `https://visitor-badge.one9x.com/badge?${badgeParams.toString()}`;
+  fetch(endpoint, { method: "GET", mode: "cors" })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Counter request failed: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((payload) => {
+      value.textContent = Number.isFinite(payload.count)
+        ? new Intl.NumberFormat("en-US").format(payload.count)
+        : "--";
+      counter.classList.add("is-ready");
+    })
+    .catch(() => {
+      value.textContent = "--";
+      counter.classList.add("is-ready");
+    });
 };
 
 initializeVisitorCounter();
