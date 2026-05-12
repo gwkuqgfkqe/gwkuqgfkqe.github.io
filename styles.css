@@ -1013,6 +1013,11 @@ a {
   font-size: 0.96rem;
 }
 
+.publication-citation strong {
+  color: var(--text);
+  font-weight: 800;
+}
+
 .link-row {
   grid-auto-flow: column;
   justify-content: start;
