@@ -346,6 +346,9 @@ const initializeVisitorCounter = () => {
 
     ensureVisitorMapStyles();
     visitorMap.visitorsSection.hidden = false;
+    visitorMap.visitorsSection.querySelectorAll("[data-reveal]").forEach((item) => {
+      item.classList.add("is-visible");
+    });
     visitorMap.visitorsNavLinks.forEach((link) => {
       link.hidden = false;
     });
