@@ -1,12 +1,12 @@
-const DEFAULT_CLUSTRMAPS_ID = "";
+const DEFAULT_CLUSTRMAPS_ID = "vyR4Uw2nfI2Gl457IlTrnBma94O_hDvBMLZtNoG4yCw";
 
 const visitorMapMarkup = `
   <div class="section-heading" data-reveal>
     <p class="eyebrow">Visitors</p>
     <h2>Visitor map and site reach.</h2>
     <p>
-      Geographic visitor tracking is prepared for a ClustrMaps widget.
-      The total below preserves the existing site counter.
+      A live ClustrMaps widget shows the geographic reach of this academic
+      homepage. The total below preserves the existing site counter.
     </p>
   </div>
 
@@ -373,7 +373,7 @@ const initializeVisitorCounter = () => {
     const script = document.createElement("script");
     script.id = "clustrmaps";
     script.type = "text/javascript";
-    script.src = `https://cdn.clustrmaps.com/map_v2.js?cl=ffffff&w=a&t=n&d=${encodeURIComponent(DEFAULT_CLUSTRMAPS_ID)}`;
+    script.src = `https://clustrmaps.com/map_v2.js?d=${encodeURIComponent(DEFAULT_CLUSTRMAPS_ID)}&cl=ffffff&w=a`;
     visitorMap.clustrMapsFrame.append(script);
   };
 
