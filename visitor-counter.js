@@ -35,8 +35,7 @@ const visitorMapMarkup = `
           <span class="visitor-pulse pulse-two"></span>
         </div>
         <p>
-          Live geographic dots will start from the first visit after the
-          ClustrMaps ID is added.
+          Loading the live ClustrMaps visitor map.
         </p>
       </div>
     </div>
@@ -148,6 +147,13 @@ const visitorMapStyles = `
     margin: 0;
     color: rgba(255, 255, 255, 0.8);
     text-align: center;
+  }
+
+  .visitor-map-placeholder a {
+    color: #ffffff;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
   }
 
   .visitor-map-art {
@@ -372,12 +378,49 @@ const initializeVisitorCounter = () => {
       return;
     }
 
-    visitorMap.clustrMapsFrame.classList.add("is-live");
+    const showMapFallback = () => {
+      if (visitorMap.clustrMapsFrame.querySelector("#clustrmaps-widget-v2")) {
+        visitorMap.clustrMapsFrame.classList.add("is-live");
+        return;
+      }
+
+      const placeholderText = visitorMap.clustrMapsFrame.querySelector(".visitor-map-placeholder p");
+      if (placeholderText) {
+        placeholderText.innerHTML = `
+          The live ClustrMaps map did not load in this browser.
+          <a href="https://clustrmaps.com/site/1ca42" target="_blank" rel="noreferrer">
+            Open visitor analytics
+          </a>.
+        `;
+      }
+    };
+
+    const revealLiveMap = () => {
+      if (!visitorMap.clustrMapsFrame.querySelector("#clustrmaps-widget-v2")) {
+        return false;
+      }
+
+      visitorMap.clustrMapsFrame.classList.add("is-live");
+      return true;
+    };
+
     const script = document.createElement("script");
     script.id = "clustrmaps";
     script.type = "text/javascript";
-    script.src = `https://clustrmaps.com/map_v2.js?d=${encodeURIComponent(DEFAULT_CLUSTRMAPS_ID)}&cl=ffffff&w=a`;
+    script.src = `https://cdn.clustrmaps.com/map_v2.js?cl=ffffff&w=a&t=n&d=${encodeURIComponent(DEFAULT_CLUSTRMAPS_ID)}`;
+    script.onerror = showMapFallback;
     visitorMap.clustrMapsFrame.append(script);
+
+    const mapCheck = window.setInterval(() => {
+      if (revealLiveMap()) {
+        window.clearInterval(mapCheck);
+      }
+    }, 300);
+
+    window.setTimeout(() => {
+      window.clearInterval(mapCheck);
+      showMapFallback();
+    }, 9000);
   };
 
   initializeVisitorMap();
