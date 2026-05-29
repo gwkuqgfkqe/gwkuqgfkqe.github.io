@@ -387,9 +387,9 @@ const initializeVisitorCounter = () => {
       const placeholderText = visitorMap.clustrMapsFrame.querySelector(".visitor-map-placeholder p");
       if (placeholderText) {
         placeholderText.innerHTML = `
-          The live ClustrMaps map did not load in this browser.
+          Live visitor analytics are available through ClustrMaps.
           <a href="https://clustrmaps.com/site/1ca42" target="_blank" rel="noreferrer">
-            Open visitor analytics
+            Open live visitor map
           </a>.
         `;
       }
