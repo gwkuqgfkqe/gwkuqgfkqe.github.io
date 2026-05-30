@@ -1,4 +1,4 @@
-const DEFAULT_CLUSTRMAPS_ID = "";
+const DEFAULT_CLUSTRMAPS_ID = "vyR4Uw2nfI2Gl457IlTrnBma94O_hDvBMLZtNoG4yCw";
 
 const visitorMapMarkup = `
   <div class="section-heading" data-reveal>
@@ -312,24 +312,6 @@ const initializeVisitorCounter = () => {
       return;
     }
 
-    const showMapFallback = () => {
-      if (visitorMap.clustrMapsFrame.querySelector("#clustrmaps-widget-v2")) {
-        visitorMap.clustrMapsFrame.classList.add("is-live");
-        return;
-      }
-
-      const placeholderText = visitorMap.clustrMapsFrame.querySelector(".visitor-map-placeholder p");
-      if (placeholderText) {
-        placeholderText.innerHTML = `
-          Live visitor analytics are available through ClustrMaps.
-          <a href="https://clustrmaps.com/site/1ca42" target="_blank" rel="noreferrer">
-            Open live visitor map
-          </a>.
-        `;
-      }
-      visitorMap.clustrMapsFrame.querySelector(".visitor-map-loader")?.remove();
-    };
-
     const revealLiveMap = () => {
       if (!visitorMap.clustrMapsFrame.querySelector("#clustrmaps-widget-v2")) {
         return false;
@@ -342,8 +324,7 @@ const initializeVisitorCounter = () => {
     const script = document.createElement("script");
     script.id = "clustrmaps";
     script.type = "text/javascript";
-    script.src = `https://cdn.clustrmaps.com/map_v2.js?cl=ffffff&w=a&t=n&d=${encodeURIComponent(DEFAULT_CLUSTRMAPS_ID)}`;
-    script.onerror = showMapFallback;
+    script.src = `https://clustrmaps.com/map_v2.js?d=${encodeURIComponent(DEFAULT_CLUSTRMAPS_ID)}&cl=ffffff&w=a`;
     visitorMap.clustrMapsFrame.append(script);
 
     const mapCheck = window.setInterval(() => {
@@ -352,10 +333,7 @@ const initializeVisitorCounter = () => {
       }
     }, 300);
 
-    window.setTimeout(() => {
-      window.clearInterval(mapCheck);
-      showMapFallback();
-    }, 9000);
+    window.setTimeout(() => window.clearInterval(mapCheck), 15000);
   };
 
   initializeVisitorMap();
