@@ -24,16 +24,7 @@ const visitorMapMarkup = `
 
     <div class="clustrmaps-frame" id="clustrmaps-frame" aria-label="Visitor map">
       <div class="visitor-map-placeholder" id="visitor-map-placeholder">
-        <div class="visitor-map-art" aria-hidden="true">
-          <span class="visitor-dot dot-one"></span>
-          <span class="visitor-dot dot-two"></span>
-          <span class="visitor-dot dot-three"></span>
-          <span class="visitor-dot dot-four"></span>
-          <span class="visitor-dot dot-five"></span>
-          <span class="visitor-dot dot-six"></span>
-          <span class="visitor-pulse pulse-one"></span>
-          <span class="visitor-pulse pulse-two"></span>
-        </div>
+        <span class="visitor-map-loader" aria-hidden="true"></span>
         <p>
           Loading the live ClustrMaps visitor map.
         </p>
@@ -138,7 +129,8 @@ const visitorMapStyles = `
     display: grid;
     min-height: 17rem;
     place-items: center;
-    gap: 0.9rem;
+    align-content: center;
+    gap: 1rem;
     padding: 1rem;
   }
 
@@ -156,66 +148,14 @@ const visitorMapStyles = `
     text-underline-offset: 0.18em;
   }
 
-  .visitor-map-art {
-    position: relative;
-    width: min(100%, 42rem);
-    aspect-ratio: 2.04 / 1;
-    overflow: hidden;
-    border-radius: 18px;
-    background:
-      linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-      radial-gradient(ellipse at 27% 38%, rgba(245, 252, 238, 0.96) 0 9%, transparent 9.4%),
-      radial-gradient(ellipse at 49% 36%, rgba(245, 252, 238, 0.96) 0 8.5%, transparent 9%),
-      radial-gradient(ellipse at 68% 39%, rgba(245, 252, 238, 0.96) 0 15%, transparent 15.5%),
-      radial-gradient(ellipse at 79% 74%, rgba(245, 252, 238, 0.96) 0 6%, transparent 6.5%),
-      linear-gradient(135deg, #2b7ca5, #2e8899);
-    background-size: 42px 42px, 42px 42px, auto, auto, auto, auto, auto;
-  }
-
-  .visitor-map-art::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(ellipse at 22% 48%, rgba(245, 252, 238, 0.96) 0 7%, transparent 7.5%),
-      radial-gradient(ellipse at 35% 66%, rgba(245, 252, 238, 0.96) 0 9%, transparent 9.5%),
-      radial-gradient(ellipse at 52% 58%, rgba(245, 252, 238, 0.96) 0 7%, transparent 7.5%),
-      radial-gradient(ellipse at 72% 59%, rgba(245, 252, 238, 0.96) 0 10%, transparent 10.5%),
-      radial-gradient(ellipse at 84% 63%, rgba(245, 252, 238, 0.96) 0 4%, transparent 4.5%);
-    filter: blur(0.2px);
-    opacity: 0.9;
-  }
-
-  .visitor-dot,
-  .visitor-pulse {
-    position: absolute;
-    z-index: 1;
+  .visitor-map-loader {
+    width: 3rem;
+    height: 3rem;
+    border: 2px solid rgba(255, 255, 255, 0.22);
+    border-top-color: rgba(255, 255, 255, 0.88);
     border-radius: 999px;
+    animation: visitor-spin 0.9s linear infinite;
   }
-
-  .visitor-dot {
-    width: 0.72rem;
-    height: 0.72rem;
-    background: #ff4d4d;
-    box-shadow: 0 0 0 4px rgba(255, 77, 77, 0.16);
-  }
-
-  .visitor-pulse {
-    width: 2.5rem;
-    height: 2.5rem;
-    border: 2px solid rgba(255, 77, 77, 0.36);
-    animation: visitor-pulse 2.4s ease-out infinite;
-  }
-
-  .dot-one { left: 24%; top: 41%; }
-  .dot-two { left: 31%; top: 52%; }
-  .dot-three { left: 52%; top: 37%; }
-  .dot-four { left: 62%; top: 43%; }
-  .dot-five { left: 74%; top: 55%; }
-  .dot-six { left: 81%; top: 71%; }
-  .pulse-one { left: calc(52% - 0.9rem); top: calc(37% - 0.9rem); }
-  .pulse-two { left: calc(81% - 0.9rem); top: calc(71% - 0.9rem); animation-delay: 0.8s; }
 
   .visitor-map-note {
     margin: 0.9rem 0 0;
@@ -227,15 +167,9 @@ const visitorMapStyles = `
     cursor: pointer;
   }
 
-  @keyframes visitor-pulse {
-    0% {
-      opacity: 0.8;
-      transform: scale(0.5);
-    }
-
-    100% {
-      opacity: 0;
-      transform: scale(1.75);
+  @keyframes visitor-spin {
+    to {
+      transform: rotate(1turn);
     }
   }
 
@@ -393,6 +327,7 @@ const initializeVisitorCounter = () => {
           </a>.
         `;
       }
+      visitorMap.clustrMapsFrame.querySelector(".visitor-map-loader")?.remove();
     };
 
     const revealLiveMap = () => {
