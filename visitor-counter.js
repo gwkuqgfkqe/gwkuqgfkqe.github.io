@@ -1,4 +1,4 @@
-const DEFAULT_CLUSTRMAPS_ID = "vyR4Uw2nfI2Gl457IlTrnBma94O_hDvBMLZtNoG4yCw";
+const DEFAULT_CLUSTRMAPS_ID = "";
 
 const visitorMapMarkup = `
   <div class="section-heading" data-reveal>
