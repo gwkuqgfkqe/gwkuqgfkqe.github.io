@@ -2,7 +2,7 @@
 
 Live site: https://gwkuqgfkqe.github.io/
 
-The repository root contains the static website served by GitHub Pages. The editable Next.js project is in `site-src/`. The site includes research project pages, publication and poster filters, BibTeX citations, three rendered views of the public fsaverage5 cortical surface, a neural alignment demonstration, and the public CV. Visitor analytics are disabled.
+The repository root contains the static website served by GitHub Pages. The editable Next.js project is in `site-src/`. The site includes research project pages, publication and poster filters, BibTeX citations, an interactive biological–mechanical brain with directional signals and a three-view fsaverage5 cortical atlas, a neural alignment demonstration, and the public CV. Visitor analytics are disabled.
 
 ## Updating the site
 

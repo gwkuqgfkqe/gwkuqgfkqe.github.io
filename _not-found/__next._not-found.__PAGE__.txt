@@ -1,5 +1,5 @@
 1:"$Sreact.fragment"
 2:I[5965,[],"OutletBoundary"]
 3:"$Sreact.suspense"
-0:{"rsc":["$","$1","c",{"children":[["$","main",null,{"id":"main","className":"reading-page","children":[["$","h1",null,{"children":"Page not found"}],["$","p",null,{"children":["$","a",null,{"href":"/#research","children":"Return to research"}]}]]}],null,["$","$L2",null,{"children":["$","$3",null,{"name":"Next.MetadataOutlet","children":"$@4"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"Y9t1JqAaEWlwaY9YYEcnB"}
+0:{"rsc":["$","$1","c",{"children":[["$","main",null,{"id":"main","className":"reading-page","children":[["$","h1",null,{"children":"Page not found"}],["$","p",null,{"children":["$","a",null,{"href":"/#research","children":"Return to research"}]}]]}],null,["$","$L2",null,{"children":["$","$3",null,{"name":"Next.MetadataOutlet","children":"$@4"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"wYDj9w0jc3nDE4yOci7Zc"}
 4:null
