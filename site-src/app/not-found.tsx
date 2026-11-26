@@ -1,1 +1,3 @@
-export default function NotFound(){return <main id="main" className="not-found"><p className="eyebrow">404 · PAGE NOT FOUND</p><h1>A missing connection.</h1><p>This page may have moved, or the address may be incomplete. You can find all current projects on the research page.</p><a className="button primary" href="/#research">Return to research →</a></main>}
+export default function NotFound() {
+  return <main id="main" className="reading-page"><h1>Page not found</h1><p><a href="/#research">Return to research</a></p></main>;
+}

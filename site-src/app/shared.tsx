@@ -1,8 +1,56 @@
 'use client';
-import {useEffect,useState} from 'react';
-import {usePathname} from 'next/navigation';
-import {ArrowUpRight,ArrowUp,Copy,Check,Menu,X} from 'lucide-react';
-export function OutLink({href,children}:{href:string;children:React.ReactNode}){return <a href={href} target="_blank" rel="noopener noreferrer">{children}<ArrowUpRight size={15}/><span className="sr-only"> (opens in new tab)</span></a>}
-export function CopyButton({text,label}:{text:string;label:string}){const [state,setState]=useState('');async function copy(){let ok=false;try{await navigator.clipboard.writeText(text);ok=true}catch{const t=document.createElement('textarea');t.value=text;t.style.cssText='position:fixed;left:-9999px;top:0';document.body.appendChild(t);t.select();ok=document.execCommand('copy');t.remove()}setState(ok?'Copied':'Copy from the text below');setTimeout(()=>setState(''),3000)}return <><button className="text-button" onClick={copy} aria-label={label}>{state==='Copied'?<Check size={15}/>:<Copy size={15}/>}<span aria-live="polite">{state||label}</span></button>{state==='Copy from the text below'&&<code className="copy-fallback">{text}</code>}</>}
-export function SiteHeader(){const [open,setOpen]=useState(false),[active,setActive]=useState('');const pathname=usePathname()?.replace(/\/$/,'') || '/';useEffect(()=>{setOpen(false);if(pathname!=='/'){setActive(pathname?.startsWith('/research')?'Research':pathname==='/cv'?'CV':'');return}const sections=[...document.querySelectorAll('main>section[id]')];const obs=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting)setActive(e.target.id.charAt(0).toUpperCase()+e.target.id.slice(1))},{rootMargin:'-15% 0px -65% 0px'});sections.forEach(s=>obs.observe(s));return()=>obs.disconnect()},[pathname]);useEffect(()=>{if(!open)return;const f=(e:KeyboardEvent)=>{if(e.key==='Escape'){setOpen(false);document.getElementById('menu-toggle')?.focus()}};document.addEventListener('keydown',f);return()=>document.removeEventListener('keydown',f)},[open]);return <><a className="skip-link" href="#main">Skip to content</a><header className="site-header"><a className="wordmark" href="/" aria-label="Zonghan Du home"><span className="monogram">ZD<span>.</span></span><span>Zonghan Du</span></a><button id="menu-toggle" className="menu-toggle" aria-label={open?'Close navigation':'Open navigation'} aria-expanded={open} aria-controls="navigation" onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button><nav id="navigation" className={open?'open':''} aria-label="Main navigation">{['About','Research','Publications','Experience','CV','Contact'].map(n=><a key={n} href={n==='CV'?'/cv':`/#${n.toLowerCase()}`} aria-current={active===n?'location':undefined} onClick={()=>setOpen(false)}>{n}{n==='CV'&&<ArrowUpRight size={13}/>}</a>)}</nav></header></>}
-export function SiteFooter(){const[show,setShow]=useState(false);useEffect(()=>{const f=()=>setShow(scrollY>700);addEventListener('scroll',f,{passive:true});return()=>removeEventListener('scroll',f)},[]);return <><footer className="site-footer"><a className="wordmark" href="/"><span className="monogram">ZD<span>.</span></span><span>Zonghan Du</span></a><span>Neural engineering · Providence, RI</span><a href="/privacy">Privacy</a><span>© 2026 Zonghan Du</span></footer>{show&&<a href="#top-anchor" className="back-top" aria-label="Back to top"><ArrowUp size={18}/></a>}</>}
+
+import { useEffect, useRef, useState } from 'react';
+import { Check, Copy, Menu, X } from 'lucide-react';
+
+export function CopyButton({ text, label }: { text: string; label: string }) {
+  const [message, setMessage] = useState('');
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(text);
+      setMessage('Copied');
+    } catch {
+      setMessage('Select the citation below to copy it.');
+    }
+  }
+  return <button type="button" className="copy-link" onClick={copy}>
+    {message === 'Copied' ? <Check size={14} /> : <Copy size={14} />}
+    <span aria-live="polite">{message || label}</span>
+  </button>;
+}
+
+const navLinks = [['Research', '/#research'], ['Publications', '/#publications'], ['Experience', '/#experience'], ['CV', '/cv/']];
+
+export function SiteHeader() {
+  const [open, setOpen] = useState(false);
+  const menu = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setOpen(false); menu.current?.focus(); }
+    };
+    window.addEventListener('keydown', escape);
+    return () => window.removeEventListener('keydown', escape);
+  }, [open]);
+
+  return <>
+    <a className="skip-link" href="#main">Skip to content</a>
+    <header className="site-header"><div className="header-inner">
+      <a className="wordmark" href="/">Zonghan Du</a>
+      <button ref={menu} className="menu-toggle" type="button" aria-controls="main-nav"
+        aria-label={open ? 'Close navigation' : 'Open navigation'} aria-expanded={open}
+        onClick={() => setOpen(!open)}>{open ? <X size={22}/> : <Menu size={22}/>}</button>
+      <nav id="main-nav" className={open ? 'open' : ''} aria-label="Main navigation">
+        {navLinks.map(([name, href]) => <a key={href} href={href} onClick={() => setOpen(false)}>{name}</a>)}
+      </nav>
+    </div></header>
+  </>;
+}
+
+export function SiteFooter() {
+  return <footer className="site-footer" id="contact">
+    <span>© 2026 Zonghan Du</span>
+    <a href="mailto:zonghan_du@brown.edu">zonghan_du@brown.edu</a>
+    <a href="/privacy/">Privacy</a>
+  </footer>;
+}

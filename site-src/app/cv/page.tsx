@@ -1,5 +1,21 @@
-import type {Metadata} from 'next';
-import {Download,ExternalLink} from 'lucide-react';
-import {profile} from '../content';
-export const metadata:Metadata={alternates:{canonical:'/cv'},title:'Curriculum vitae | Zonghan Du',description:'Education, research, publications and academic service of Zonghan Du.'};
-export default function CVPage(){return <main id="main" className="cv-page"><nav className="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a><span>/</span><span aria-current="page">CV</span></nav><p className="eyebrow">CURRICULUM VITAE</p><h1>Zonghan Du</h1><p>Education, research, publications and academic service.<br/><span className="metadata">Public edition · Updated {profile.updated}</span></p><div className="button-row"><a className="button primary" href="/Zonghan_Du_CV.pdf" download>Download PDF <Download size={17}/></a><a className="button secondary" href="/Zonghan_Du_CV.pdf" target="_blank" rel="noopener noreferrer">Open in new tab <ExternalLink size={16}/></a></div><object className="cv-viewer" type="application/pdf" data="/Zonghan_Du_CV.pdf" aria-label="Zonghan Du curriculum vitae PDF"><p>Your browser can open the CV as a separate PDF. <a href="/Zonghan_Du_CV.pdf">Open or download the CV</a>.</p></object></main>}
+import type { Metadata } from 'next';
+import { Download } from 'lucide-react';
+import { profile } from '../content';
+
+export const metadata: Metadata = {
+  title: 'Curriculum vitae | Zonghan Du',
+  description: 'Zonghan Du’s academic curriculum vitae.',
+  alternates: { canonical: '/cv/' },
+};
+
+export default function CVPage() {
+  return <main id="main" className="reading-page cv-page">
+    <p className="affiliation">Zonghan Du</p><h1>Curriculum vitae</h1>
+    <p className="cv-date">Updated {profile.updated} · 3 pages</p>
+    <div className="cv-actions"><a className="primary-link" href="/Zonghan_Du_CV.pdf" download><Download size={16}/> Download PDF</a>
+      <a href="/Zonghan_Du_CV.pdf">Open PDF</a></div>
+    <object className="cv-viewer" type="application/pdf" data="/Zonghan_Du_CV.pdf" aria-label="Curriculum vitae in PDF format">
+      <a href="/Zonghan_Du_CV.pdf">Read the CV as a PDF</a>
+    </object>
+  </main>;
+}

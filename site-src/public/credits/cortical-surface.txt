@@ -1,0 +1,11 @@
+Cortical surface illustration
+
+The three views are original renderings of the public FreeSurfer fsaverage5 pial surface distributed by Nilearn. No participant or patient data were used. The surface color is illustrative.
+
+Source meshes: https://github.com/nilearn/nilearn/tree/main/nilearn/datasets/data/fsaverage5
+Template documentation: https://nilearn.github.io/stable/modules/generated/nilearn.datasets.load_fsaverage.html
+FreeSurfer: https://surfer.nmr.mgh.harvard.edu/
+FreeSurfer license: freesurfer-license.txt
+Nilearn license: nilearn-license.txt
+
+Spectral and Source Sans 3 are distributed under the SIL Open Font License. Their license texts are included alongside this file.

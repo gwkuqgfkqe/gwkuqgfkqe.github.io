@@ -1,13 +1,53 @@
-import {ArrowUpRight,Download,MapPin,GraduationCap,BookOpen} from 'lucide-react';
-import {profile,intro,projects,experience,education,recognition,skills} from './content';
-import {OutLink,CopyButton} from './shared';
 import BrainHero from './brain-hero';
 import PublicationList from './publication-list';
-function SectionHead({number,title,sub}:{number:string;title:string;sub:string}){return <div className="section-head"><p className="eyebrow">{number} / {title.toUpperCase()}</p><h2>{sub}</h2></div>}
-export default function Portfolio(){return <main id="main"><BrainHero/><div className="affiliation-strip">{intro.affiliations.map(a=><span key={a}>{a}</span>)}</div>
-<section id="about" className="section about"><SectionHead number="01" title="About" sub="Building useful interfaces. Asking deeper questions."/><div className="about-grid"><div className="about-prose">{intro.about.map(p=><p key={p}>{p}</p>)}<div className="inline-links"><OutLink href={profile.scholar}>Google Scholar</OutLink><OutLink href={profile.github}>GitHub</OutLink><OutLink href={profile.linkedin}>LinkedIn</OutLink></div></div><aside className="focus-panel"><p className="eyebrow">RESEARCH INTERESTS</p><div><span>01</span><h3>Human intracortical BCI</h3><p>Neural decoding and interfaces for functional restoration.</p></div><div><span>02</span><h3>Representations over time</h3><p>Neural drift, population dynamics and long-term decoder stability.</p></div><div><span>03</span><h3>Biological & artificial intelligence</h3><p>NeuroAI and computational principles shared by brains and models.</p></div></aside></div></section>
-<section id="research" className="section research"><div className="head-row"><SectionHead number="02" title="Research" sub="From changing signals to stable understanding."/><p className="side-note">Selected work in neural interfaces, representation learning and scientific evaluation.</p></div><div className="project-grid">{projects.slice(0,4).map(p=><a className={'project-card project-'+p.id} href={'/research/'+p.id} key={p.id}><div className="card-top"><p className="eyebrow">{p.number} / {p.category}</p><ArrowUpRight size={22}/></div><div className="project-title"><h3>{p.name}</h3><p>{p.subtitle}</p></div><div className="project-metric"><span>{p.metric}</span><small>{p.metricLabel}</small></div><div className="card-bottom"><span>{p.institution}</span><span className="pill">{p.status.split(' · ')[0]}</span></div></a>)}</div><div className="additional-projects">{projects.slice(4).map(p=><a href={'/research/'+p.id} key={p.id}><div><span className="eyebrow">{p.institution}</span><h3>{p.name}</h3><p>{p.subtitle}</p></div><ArrowUpRight size={20}/></a>)}</div></section>
-<section id="publications" className="section"><div className="head-row"><SectionHead number="03" title="Publications" sub="Papers & manuscripts."/><OutLink href={profile.scholar}>Google Scholar</OutLink></div><PublicationList/></section>
-<section id="experience" className="section experience"><SectionHead number="04" title="Experience" sub="A research path across disciplines."/><div className="timeline">{experience.map(([date,place,role,advisor,topic])=><article key={place}><span className="timeline-date">{date}</span><div><h3>{place}</h3><p className="role">{role}</p><p>{topic}</p><p className="metadata">Advisor{advisor.includes('&')?'s':''}: {advisor}</p></div></article>)}</div><div className="education-grid">{education.map(e=><article key={e.institution}><GraduationCap size={25}/><p className="eyebrow">{e.institution} · {e.date}</p><h3>{e.degree}</h3><p>GPA {e.gpa}</p><p>{e.note}</p></article>)}</div><div className="recognition"><div><h3>Recognition & service</h3>{recognition.map(x=><p key={x}>{x}</p>)}</div><div><h3>Beyond research</h3><p>{intro.personal}</p></div></div><p className="skills-line"><strong>Methods & tools</strong><br/>{skills.join(' · ')}</p></section>
-<section id="cv" className="section cv-banner"><div><p className="eyebrow">05 / CURRICULUM VITAE</p><h2>The full picture.</h2><p>Research, publications, education and experience.<br/><span className="metadata">Updated {profile.updated}</span></p></div><div className="button-row"><a className="button primary" href="/cv">View CV <BookOpen size={18}/></a><a className="button secondary" href="/Zonghan_Du_CV.pdf" download>Download PDF <Download size={18}/></a></div></section>
-<section id="contact" className="section contact"><p className="eyebrow">06 / CONTACT</p><h2>Let’s talk about<br/><span>brains, models & interfaces.</span></h2><p>{intro.contact}</p><a className="email-link" href={'mailto:'+profile.email}>{profile.email}<ArrowUpRight size={26}/></a><div className="contact-bottom"><CopyButton text={profile.email} label="Copy email"/><span><MapPin size={15}/>{intro.location}</span><div className="inline-links"><OutLink href={profile.scholar}>Scholar</OutLink><OutLink href={profile.github}>GitHub</OutLink><OutLink href={profile.linkedin}>LinkedIn</OutLink></div></div></section></main>}
+import { experience, projects } from './content';
+
+export default function Portfolio() {
+  return <main id="main" className="site-main">
+    <BrainHero />
+    <section id="research" className="chapter">
+      <header className="chapter-heading"><h2>Research</h2></header>
+      <div className="chapter-body">
+        {projects.slice(0, 4).map(project => (
+          <article className="research-entry" key={project.id}>
+            <p className="source-line">{project.institution}</p>
+            <h3><a href={'/research/' + project.id + '/'}>{project.name}</a></h3>
+            <p>{project.summary}</p>
+          </article>
+        ))}
+        <details className="more-research"><summary>More research projects</summary>
+          <ul>{projects.slice(4).map(p => <li key={p.id}><a href={'/research/' + p.id + '/'}>{p.name}</a><span>{p.institution}</span></li>)}</ul>
+        </details>
+      </div>
+    </section>
+    <section id="publications" className="chapter">
+      <header className="chapter-heading"><h2>Publications<br className="desktop-break"/> & posters</h2></header>
+      <div className="chapter-body"><PublicationList /></div>
+    </section>
+    <section id="experience" className="chapter">
+      <header className="chapter-heading"><h2>Experience</h2></header>
+      <div className="chapter-body appointments">
+        {experience.map(([dates, institution, role, advisors]) => <article key={institution}>
+          <div><h3>{institution}</h3><p>{role} · {advisors}</p></div><span>{dates}</span>
+        </article>)}
+      </div>
+    </section>
+    <section className="chapter" id="education">
+      <header className="chapter-heading"><h2>Education</h2></header>
+      <div className="chapter-body appointments">
+        <article><div><h3>Brown University</h3><p>M.S. in Biomedical Engineering</p><p>Cross-registered in Computational Neuroscience at Harvard University.</p></div><span>2025 – 2027 (expected)</span></article>
+        <article><div><h3>Sun Yat-sen University</h3><p>B.Eng. in Computer Science and Technology</p></div><span>2020 – 2024</span></article>
+      </div>
+    </section>
+    <section className="chapter awards" id="recognition">
+      <header className="chapter-heading"><h2>Honors & service</h2></header>
+      <div className="chapter-body">
+        <ul><li>Brown University Pathway to Ph.D. Summer Research Stipend · 2026</li>
+          <li>IEEE SMC Student and Young Professional Travel Grant · 2026</li>
+          <li>Excellent Bachelor’s Degree Project, Sun Yat-sen University · 2024</li>
+          <li>Invited reviewer for ICASSP (2026) and ICME (2025, 2026).</li></ul>
+        <p>Outside research, I’m a National Class I swimmer in China. I placed first in the 200 m freestyle at the 2020 National Swimming Specialized Admission Exam.</p>
+      </div>
+    </section>
+  </main>;
+}

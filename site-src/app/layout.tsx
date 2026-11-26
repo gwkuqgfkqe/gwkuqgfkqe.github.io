@@ -1,8 +1,23 @@
-import type {Metadata} from 'next';
-import {SiteHeader,SiteFooter} from './shared';
-import {siteOrigin} from './site-config';
-import {profile} from './content';
+import type { Metadata } from 'next';
+import { SiteHeader, SiteFooter } from './shared';
+import { siteOrigin } from './site-config';
+import { profile } from './content';
 import './globals.css';
 
-export function generateMetadata():Metadata{const origin=siteOrigin();return {metadataBase:origin?new URL(origin):undefined,title:'Zonghan Du | Neural Engineering & Brain–Computer Interfaces',description:'Zonghan Du is a Biomedical Engineering master’s student at Brown University and BrainGate researcher working on neural decoding, representational drift and stable brain–computer interfaces.',alternates:origin?{canonical:origin}:undefined,openGraph:{type:'website',title:'Zonghan Du | Neural Engineering',description:'Neural decoding, representational drift and stable brain–computer interfaces.',...(origin?{url:origin,images:[{url:origin+'/og.png',width:1536,height:1024,alt:'Zonghan Du — Neural engineering and brain–computer interfaces'}]}:{})},twitter:{card:'summary_large_image',title:'Zonghan Du | Neural Engineering',description:'Neural decoding, representational drift and stable brain–computer interfaces.',...(origin?{images:[origin+'/og.png']}:{})},icons:{icon:'/favicon.svg'},robots:{index:true,follow:true}}}
-export default function Layout({children}:{children:React.ReactNode}){const origin=siteOrigin();const person={'@context':'https://schema.org','@type':'Person',name:profile.name,description:'Biomedical Engineering master’s student and Graduate Student Researcher',email:'mailto:'+profile.email,...(origin?{url:origin}:{}),affiliation:[{'@type':'Organization',name:'Brown University'},{'@type':'Organization',name:'BrainGate'}],sameAs:[profile.scholar,profile.github,profile.linkedin],knowsAbout:['Brain–computer interfaces','Neural decoding','Representational drift','Computational neuroscience']};return <html lang="en"><body><div id="top-anchor"/><SiteHeader/>{children}<SiteFooter/><script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(person).replace(/</g,'\\u003c')}}/></body></html>}
+const title = 'Zonghan Du | Neural Engineering';
+const description = 'Research on intracortical brain–computer interfaces, cross-session neural decoding, and neural population dynamics at Brown University and Massachusetts General Hospital.';
+export const metadata: Metadata = {
+  metadataBase: new URL(siteOrigin()), title, description, alternates: {canonical: '/'},
+  openGraph: {type: 'website', title, description, url: '/', images: [{url: '/og.png', width: 1200, height: 630, alt: 'Zonghan Du · Neural engineering'}]},
+  twitter: {card: 'summary_large_image', title, description, images: ['/og.png']},
+  icons: { icon: '/favicon.svg' },
+};
+
+export default function Layout({children}: {children: React.ReactNode}) {
+  const person = {'@context':'https://schema.org','@type':'Person',name:profile.name,
+    url:siteOrigin(),email:'mailto:'+profile.email,sameAs:[profile.github,profile.scholar,profile.linkedin],
+    affiliation:[{'@type':'Organization',name:'Brown University'},{'@type':'Organization',name:'BrainGate'}]};
+  return <html lang="en"><body><SiteHeader/>{children}<SiteFooter/>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(person).replace(/</g,'\\u003c')}}/>
+  </body></html>;
+}

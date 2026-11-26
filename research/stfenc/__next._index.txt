@@ -1,0 +1,7 @@
+1:"$Sreact.fragment"
+2:I[1342,["177","static/chunks/app/layout-8202f46a143986b6.js"],"SiteHeader"]
+3:I[5136,[],""]
+4:I[1446,[],""]
+5:I[1342,["177","static/chunks/app/layout-8202f46a143986b6.js"],"SiteFooter"]
+:HL["/_next/static/css/def9290544b9fa0c.css","style"]
+0:{"rsc":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/css/def9290544b9fa0c.css","precedence":"next"}]],["$","html",null,{"lang":"en","children":["$","body",null,{"children":[["$","$L2",null,{}],["$","$L3",null,{"parallelRouterKey":"children","template":["$","$L4",null,{}],"notFound":[["$","main",null,{"id":"main","className":"reading-page","children":[["$","h1",null,{"children":"Page not found"}],["$","p",null,{"children":["$","a",null,{"href":"/#research","children":"Return to research"}]}]]}],[]]}],["$","$L5",null,{}],["$","script",null,{"type":"application/ld+json","dangerouslySetInnerHTML":{"__html":"{\"@context\":\"https://schema.org\",\"@type\":\"Person\",\"name\":\"Zonghan Du\",\"url\":\"https://gwkuqgfkqe.github.io\",\"email\":\"mailto:zonghan_du@brown.edu\",\"sameAs\":[\"https://github.com/gwkuqgfkqe\",\"https://scholar.google.com/citations?user=ibxu-yQAAAAJ&hl=en\",\"https://www.linkedin.com/in/zonghan-frank-du\"],\"affiliation\":[{\"@type\":\"Organization\",\"name\":\"Brown University\"},{\"@type\":\"Organization\",\"name\":\"BrainGate\"}]}"}}]]}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"Y9t1JqAaEWlwaY9YYEcnB"}

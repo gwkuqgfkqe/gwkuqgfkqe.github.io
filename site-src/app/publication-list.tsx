@@ -1,8 +1,60 @@
 'use client';
-import {useState} from 'react';
-import {Tabs,TabsList,TabsTrigger,TabsContent} from '@/components/ui/tabs';
-import {Select,SelectTrigger,SelectValue,SelectContent,SelectItem} from '@/components/ui/select';
-import {publications,projects} from './content';
-import {CopyButton,OutLink} from './shared';
-function citation(p:typeof publications[number]){const manuscript=p.type==='Preprints & under review';return `@${manuscript?'unpublished':'inproceedings'}{du${p.year}${p.title.split(':')[0].replace(/[^a-z]/gi,'').slice(0,18)},\n  title = {${p.title}},\n  author = {${p.authors.replace(/,? and /g,'; ').replace(/, (?=[A-Z][a-z]+,)/g,'; ').split('; ').join(' and ')}},\n  year = {${p.year}},\n  ${manuscript?'note':'booktitle'} = {${p.venue}}${p.links[0]?`,\n  url = {${p.links[0].href}}`:''}\n}`}
-export default function PublicationList(){const[year,setYear]=useState('All years');const types=['All','Published & accepted','Under review'];const list=(type:string)=>{const selected=publications.filter(p=>(type==='All'||(type==='Under review'?p.type==='Preprints & under review':p.type===type))&&(year==='All years'||p.year===year));return selected.length?<div className="paper-list">{selected.map(p=>{const project=projects.find(x=>p.title.includes(x.id==='context-audit'?'Context-Conditional':x.id==='neuroscribe'?'Decoding by Dynamics':x.id==='ecog'?'Dual-layer hand':'__no__'));return <article className="paper" key={p.title}><span className="paper-year">{p.year}</span><div><p className="paper-venue">{p.venue}</p><h3>{p.title}</h3><p className="authors">{p.authors.split('Du, Z.').map((part,i)=><span key={i}>{i>0&&<strong>Du, Z.</strong>}{part}</span>)}</p><div className="paper-actions">{p.links.map(l=><OutLink href={l.href} key={l.href}>{l.label}</OutLink>)}{project&&<a href={'/research/'+project.id}>Project</a>}<CopyButton label="Copy BibTeX" text={citation(p)}/></div><details className="summary"><summary>Research summary & citation</summary><p>{p.summary}</p>{p.title.startsWith('Decoding by Dynamics')&&<p className="version-note">This entry describes the current manuscript. The project page separately identifies an earlier public preprint with a different title and author list.</p>}<pre>{citation(p)}</pre></details></div></article>})}</div>:<p className="no-papers" role="status">No papers match this selection. Choose another year or status.</p>};return <Tabs defaultValue="All" className="publication-tabs"><div className="publication-controls"><TabsList variant="line" aria-label="Publication status">{types.map(t=><TabsTrigger key={t} value={t}>{t}</TabsTrigger>)}</TabsList><div className="year-filter"><span id="year-label">Year</span><Select value={year} onValueChange={setYear}><SelectTrigger aria-labelledby="year-label"><SelectValue/></SelectTrigger><SelectContent>{['All years','2026','2025','2024','2023'].map(y=><SelectItem value={y} key={y}>{y}</SelectItem>)}</SelectContent></Select></div></div>{types.map(t=><TabsContent key={t} value={t}>{list(t)}</TabsContent>)}</Tabs>}
+
+import { useState } from 'react';
+import { publications } from './content';
+import { CopyButton } from './shared';
+
+type Paper = typeof publications[number];
+const groups = ['Published & accepted', 'Preprints', 'In preparation', 'Posters', 'All'];
+const years = [...new Set(publications.map(paper => paper.year))].sort((a, b) => b - a);
+
+function bibtex(paper: Paper) {
+  const type = paper.group === 'Published & accepted' ? 'inproceedings' : paper.group === 'Preprints' ? 'misc' : 'unpublished';
+  const venueKey = type === 'inproceedings' ? 'booktitle' : 'note';
+  const publicLink = paper.links.find(link => ['Preprint', 'Paper', 'Chapter', 'Abstract'].includes(link.label));
+  const venue = paper.group === 'Published & accepted' ? paper.venue.replace(' · accepted', '') : paper.venue;
+  const fields = [
+    ['title', paper.title], ['author', paper.authors.join(' and ')],
+    ['year', String(paper.year)], [venueKey, venue],
+  ];
+  if (publicLink) fields.push(['url', publicLink.href]);
+  return '@' + type + '{' + paper.id + paper.year + ',\n' +
+    fields.map(([key, value]) => '  ' + key + ' = {' + value + '}').join(',\n') + '\n}';
+}
+
+function Authors({ names }: { names: string[] }) {
+  return <p className="authors">{names.map((name, i) => <span key={name}>
+    {i > 0 && ' · '}{name === 'Du, Z.' ? <strong>{name}</strong> : name}
+  </span>)}</p>;
+}
+
+export default function PublicationList() {
+  const [group, setGroup] = useState(groups[0]);
+  const [year, setYear] = useState('');
+  const filtered = publications.filter(paper =>
+    (group === 'All' || paper.group === group) && (!year || String(paper.year) === year));
+  return <>
+    <div className="pub-controls">
+      <div className="pub-tabs" role="group" aria-label="Publication type">
+        {groups.map(item => <button type="button" key={item} aria-pressed={item === group}
+          onClick={() => setGroup(item)}>{item}</button>)}
+      </div>
+      <select aria-label="Publication year" value={year} onChange={e => setYear(e.target.value)}>
+        <option value="">All years</option>{years.map(y => <option key={y}>{y}</option>)}
+      </select>
+    </div>
+    <span role="status" className="sr-only">{filtered.length} matching entries</span>
+    {filtered.length === 0 && <p className="no-papers">No entries for this year and publication type.</p>}
+    {filtered.map(paper => <article key={paper.id} className="paper">
+      <span className="paper-year">{paper.year}</span>
+      <div><h3>{paper.title}</h3><Authors names={paper.authors}/>
+        <p className="paper-venue">{paper.venue}</p>
+        <div className="paper-links">{paper.links.map(link => <a key={link.href} href={link.href}>{link.label}</a>)}
+          {paper.project && <a href={'/research/' + paper.project + '/'}>Research details</a>}
+          <details><summary>BibTeX</summary><div className="citation"><pre>{bibtex(paper)}</pre>
+            <CopyButton label="Copy citation" text={bibtex(paper)} /></div></details>
+        </div>
+      </div>
+    </article>)}
+  </>;
+}

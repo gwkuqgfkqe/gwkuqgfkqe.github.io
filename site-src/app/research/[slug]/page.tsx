@@ -1,8 +1,40 @@
-import {notFound} from 'next/navigation';
-import type {Metadata} from 'next';
-import {projects,projectDetails,priorDynamicsPreprint} from '../../content';
-import {OutLink} from '../../shared';
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { legacyProjects, projectBySlug, projects, publications } from '../../content';
 import AlignmentDemo from '../../simulation';
-export function generateStaticParams(){return projects.map(p=>({slug:p.id}))}
-export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{const {slug}=await params;const p=projects.find(x=>x.id===slug);return p?{title:`${p.name} | Zonghan Du`,description:p.subtitle,alternates:{canonical:'/research/'+p.id},openGraph:{title:`${p.name} | Zonghan Du`,description:p.subtitle,images:[]},twitter:{card:'summary',title:`${p.name} | Zonghan Du`,description:p.subtitle,images:[]}}:{title:'Project not found | Zonghan Du'}}
-export default async function ProjectPage({params}:{params:Promise<{slug:string}>}){const {slug}=await params;const p=projects.find(x=>x.id===slug);if(!p)notFound();const d=projectDetails[p.id];return <main id="main" className="detail-page"><nav className="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a><span>/</span><a href="/#research">Research</a><span>/</span><span aria-current="page">{p.name}</span></nav><p className="eyebrow">{p.category}</p><h1>{p.name}</h1><p className="detail-subtitle">{p.subtitle}</p><div className="detail-meta"><span>{p.institution}</span><span className="pill">{p.status}</span></div><p className="detail-question">{p.question}</p><div className="detail-columns"><div><section><h2>Why this question matters</h2><p>{d.why}</p></section><section><h2>My contributions</h2><ul>{d.contributions.map(c=><li key={c}>{c}</li>)}</ul></section><section><h2>{p.id==='neural-drift'||p.id==='seeg'?'Current progress':'Results & evaluation'}</h2><p>{p.evidence}</p></section>{d.next&&<section><h2>Next questions</h2><p>{d.next}</p></section>}</div><aside><div className="scope-note"><h3>Scope of the evidence</h3><p>{p.limitation}</p></div>{p.links.length>0&&<section style={{marginTop:30}}><h2>Public resources</h2><div className="detail-resources">{p.links.map(l=><OutLink href={l.href} key={l.href}>{l.label}</OutLink>)}</div></section>}{p.id==='neuroscribe'&&<section style={{marginTop:30}}><h2>Earlier public version</h2><p className="public-note">The {priorDynamicsPreprint.date} preprint is titled <em>{priorDynamicsPreprint.title}</em>, by {priorDynamicsPreprint.authors}. It precedes the current manuscript listed in Publications.</p><div className="detail-resources"><OutLink href={priorDynamicsPreprint.href}>Read earlier preprint</OutLink></div></section>}<div className="detail-tags">{p.tags.map(t=><span key={t}>{t}</span>)}</div></aside></div>{p.id==='neural-drift'&&<AlignmentDemo/>}<nav className="other-research" aria-label="More research"><a href="/#research">← All research</a><a href={'/research/'+projects[(projects.findIndex(x=>x.id===p.id)+1)%projects.length].id}>Next project: {projects[(projects.findIndex(x=>x.id===p.id)+1)%projects.length].name} →</a></nav></main>}
+
+type Props = { params: Promise<{slug: string}> };
+
+export function generateStaticParams() {
+  return [...projects.map(p => p.id), ...Object.keys(legacyProjects)].map(slug => ({ slug }));
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const p = projectBySlug((await params).slug);
+  if (!p) return {};
+  const url = '/research/' + p.id + '/';
+  return {
+    title: p.name + ' | Zonghan Du', description: p.summary, alternates: { canonical: url },
+    openGraph: { title: p.name, description: p.summary, url, images: ['/og.png'] },
+  };
+}
+
+export default async function ProjectPage({ params }: Props) {
+  const project = projectBySlug((await params).slug);
+  if (!project) notFound();
+  return <main id="main" className="reading-page">
+    <a href="/#research" className="back-link">All research</a>
+    <p className="affiliation">{project.institution}</p><h1>{project.name}</h1>
+    <p className="detail-lead">{project.summary}</p>
+    {project.paragraphs.map(([title, text]) => <section className="prose-section" key={title}><h2>{title}</h2><p>{text}</p></section>)}
+    {project.id === 'neural-drift' && <AlignmentDemo />}
+    <section className="prose-section resources"><h2>Related work</h2>
+      {project.resources.map(id => {
+        const item = publications.find(paper => paper.id === id);
+        if (!item) return null;
+        return <article key={id}><p className="source-line">{item.venue} · {item.year}</p><h3>{item.title}</h3>
+          <div className="paper-links">{item.links.map(l => <a key={l.href} href={l.href}>{l.label}</a>)}</div></article>;
+      })}
+    </section>
+  </main>;
+}
