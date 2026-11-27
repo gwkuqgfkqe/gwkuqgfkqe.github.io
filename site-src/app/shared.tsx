@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Check, Copy, Menu, X } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 export function CopyButton({ text, label }: { text: string; label: string }) {
   const [message, setMessage] = useState('');
@@ -22,6 +23,7 @@ export function CopyButton({ text, label }: { text: string; label: string }) {
 const navLinks = [['Research', '/#research'], ['Publications', '/#publications'], ['Experience', '/#experience'], ['CV', '/cv/']];
 
 export function SiteHeader() {
+  const isHome = usePathname() === '/';
   const [open, setOpen] = useState(false);
   const menu = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -35,7 +37,7 @@ export function SiteHeader() {
 
   return <>
     <a className="skip-link" href="#main">Skip to content</a>
-    <header className="site-header"><div className="header-inner">
+    {!isHome && <header className="site-header"><div className="header-inner">
       <a className="wordmark" href="/">Zonghan Du</a>
       <button ref={menu} className="menu-toggle" type="button" aria-controls="main-nav"
         aria-label={open ? 'Close navigation' : 'Open navigation'} aria-expanded={open}
@@ -43,7 +45,7 @@ export function SiteHeader() {
       <nav id="main-nav" className={open ? 'open' : ''} aria-label="Main navigation">
         {navLinks.map(([name, href]) => <a key={href} href={href} onClick={() => setOpen(false)}>{name}</a>)}
       </nav>
-    </div></header>
+    </div></header>}
   </>;
 }
 
@@ -52,5 +54,6 @@ export function SiteFooter() {
     <span>© 2026 Zonghan Du</span>
     <a href="mailto:zonghan_du@brown.edu">zonghan_du@brown.edu</a>
     <a href="/privacy/">Privacy</a>
+    <a href="https://jonbarron.info/">Layout inspired by Jon Barron</a>
   </footer>;
 }

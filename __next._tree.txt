@@ -1,3 +1,8 @@
-:HL["/_next/static/css/3d72e1d3010aa799.css","style"]
+:HL["/_next/static/css/bfc51da0aef029b5.css","style"]
 :HL["/_next/static/css/911660ba7a3e51ca.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"wYDj9w0jc3nDE4yOci7Zc"}
+:HL["/zonghan-du.webp","image",{"fetchPriority":"high"}]
+:HL["/research-figures/gesture-decoding.webp","image"]
+:HL["/research-figures/neural-drift.webp","image"]
+:HL["/research-figures/seeg.webp","image"]
+:HL["/research-figures/ss-dmp.webp","image"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"ttFhrr5PYwy2o9ih0CA-E"}

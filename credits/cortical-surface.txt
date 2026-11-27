@@ -9,3 +9,8 @@ FreeSurfer license: freesurfer-license.txt
 Nilearn license: nilearn-license.txt
 
 Spectral and Source Sans 3 are distributed under the SIL Open Font License. Their license texts are included alongside this file.
+
+Profile photograph: Zonghan Du’s public BrainGate team profile, https://www.braingate.org/team/zonghan-du/
+Movement-decoding thumbnail: public Neural-SS-DMP repository, outputs/test_best_m2/plots/test_full_seq_0_teacher.png, https://github.com/gwkuqgfkqe/Neural-SS-DMP
+The session-alignment illustration is a schematic. The macro-F1 comparison and response window reflect the corresponding project descriptions.
+Lato is distributed under the SIL Open Font License, included in lato-OFL.txt.

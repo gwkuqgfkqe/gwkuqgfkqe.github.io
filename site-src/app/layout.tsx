@@ -8,8 +8,8 @@ const title = 'Zonghan Du | Neural Engineering';
 const description = 'Research on intracortical brain–computer interfaces, cross-session neural decoding, and neural population dynamics at Brown University and Massachusetts General Hospital.';
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin()), title, description, alternates: {canonical: '/'},
-  openGraph: {type: 'website', title, description, url: '/', images: [{url: '/og.png', width: 1200, height: 630, alt: 'Zonghan Du · Neural engineering'}]},
-  twitter: {card: 'summary_large_image', title, description, images: ['/og.png']},
+  openGraph: {type: 'website', title, description, url: '/', images: [{url: '/zonghan-du.webp', width: 560, height: 560, alt: 'Zonghan Du'}]},
+  twitter: {card: 'summary', title, description, images: ['/zonghan-du.webp']},
   icons: { icon: '/favicon.svg' },
 };
 

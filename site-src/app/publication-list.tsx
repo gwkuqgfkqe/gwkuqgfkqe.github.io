@@ -24,7 +24,7 @@ function bibtex(paper: Paper) {
 
 function Authors({ names }: { names: string[] }) {
   return <p className="authors">{names.map((name, i) => <span key={name}>
-    {i > 0 && ' · '}{name === 'Du, Z.' ? <strong>{name}</strong> : name}
+    {i > 0 && ', '}{name === 'Du, Z.' ? <strong>{name}</strong> : name}
   </span>)}</p>;
 }
 
@@ -47,7 +47,7 @@ export default function PublicationList() {
     {filtered.length === 0 && <p className="no-papers">No entries for this year and publication type.</p>}
     {filtered.map(paper => <article key={paper.id} className="paper">
       <span className="paper-year">{paper.year}</span>
-      <div><h3>{paper.title}</h3><Authors names={paper.authors}/>
+      <div><h3>{(paper.links[0] || paper.project) ? <a href={paper.links.find(link => ['Paper','Preprint','Chapter','Abstract'].includes(link.label))?.href || (paper.project ? '/research/' + paper.project + '/' : paper.links[0].href)}>{paper.title}</a> : paper.title}</h3><Authors names={paper.authors}/>
         <p className="paper-venue">{paper.venue}</p>
         <div className="paper-links">{paper.links.map(link => <a key={link.href} href={link.href}>{link.label}</a>)}
           {paper.project && <a href={'/research/' + paper.project + '/'}>Research details</a>}

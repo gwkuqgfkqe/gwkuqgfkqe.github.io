@@ -83,7 +83,7 @@ export default function BrainInterface() {
       <div className="interface-art">
         <picture>
           <source media="(max-width: 700px)" srcSet="/brain-mobile.webp" />
-          <img src="/brain.webp" width="1536" height="1024" fetchPriority="high" draggable={false}
+          <img src="/brain.webp" width="1536" height="1024" loading="lazy" draggable={false}
             alt="Top view of a brain, with anatomical folds on the left and metallic circuitry on the right." />
         </picture>
         <svg ref={signals} className="interface-signals" viewBox="0 0 100 66.6667" aria-hidden="true">
